@@ -814,6 +814,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 ## 初始化
 > [Initialization](https://en.cppreference.com/w/cpp/language/initialization)
+> [Back to Basics: Initialization in C++ - Ben Saks - CppCon 2023](https://www.youtube.com/watch?v=_23qmZtDBxg&ab_channel=CppCon) 
 
 定义一个变量时，例如 `int a;`，它会在内存中为变量 `a` 腾出空间，但不会自动给它赋值。这是定义阶段。
 
@@ -822,6 +823,28 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 在C++中，如果定义了一个类的对象而没有给出具体的初值，则调用该类的默认构造函数来进行初始化（如果没有提供任何构造函数，编译器会提供一个默认的构造函数）。
 
 所以定义和初始化可以在同一行代码中完成，但它们描述的是不同的操作和阶段。
+
+### direct-initialization
+> [Direct-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/direct_initialization) 
+
+- Initializes an object from explicit set of constructor arguments.
+
+- built-in types
+```cpp
+int x(5);
+double y(2.3);
+```
+- user-defined types
+调用各种构造函数的初始化，都是直接初始化。
+```cpp
+std::string s1("hello");
+std::string s2(s1); //调用拷贝构造函数，但还是 direct initialization
+```
+
+### value-initialization
+> [Value-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/value_initialization) 
+
+- This is the initialization performed when an object is constructed with an empty initializer.
 
 ### 默认初始化
 > [Initialization](https://en.cppreference.com/w/cpp/language/initialization)
@@ -998,6 +1021,67 @@ Global variable value: 42
 ```
 
 使用`extern`关键字确保了在`main.cpp`中能正确访问在`globals.cpp`中定义的`globalVariable`变量，这展示了如何在C++中跨文件共享全局变量。
+
+# 静态变量
+
+## 初始化
+在C++中，静态变量的初始化时机取决于变量的定义位置和类型。主要有两类静态变量：**静态局部变量**和**静态全局变量**（包括静态成员变量）。它们的初始化时机如下：
+
+### 静态局部变量
+
+静态局部变量是在函数或方法内部定义的，并且使用 `static` 关键字声明。它们的初始化时机是**第一次使用时**（即懒初始化）。
+
+```cpp
+#include <iostream>
+
+void foo() {
+    static int x = 0;  // 静态局部变量
+    x++;
+    std::cout << "x = " << x << std::endl;
+}
+
+int main() {
+    foo();  // 第一次调用，x 被初始化为 0，然后递增为 1
+    foo();  // 第二次调用，x 已经初始化，递增为 2
+    return 0;
+}
+```
+
+```cpp
+x = 1
+x = 2
+```
+
+### 静态全局变量和静态成员变量
+静态全局变量和静态成员变量的初始化时机是**程序启动时**（即静态初始化）。
+
+```cpp
+#include <iostream>
+
+static int x = 0;  // 静态全局变量
+
+int main() {
+    std::cout << "x = " << x << std::endl;  // x 在程序启动时初始化为 0
+    return 0;
+}
+```
+
+```cpp
+#include <iostream>
+
+class MyClass {
+public:
+    static int x;  // 静态成员变量声明
+};
+
+// 静态成员变量定义和初始化
+int MyClass::x = 0;
+
+int main() {
+    std::cout << "MyClass::x = " << MyClass::x << std::endl;  // x 在程序启动时初始化为 0
+    return 0;
+}
+```
 
 # c++ 程序优化
 > [CSAPP-5-程序优化](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第五章%20Optimizing%20Program%20Performance.md)
@@ -1268,3 +1352,459 @@ for (int i = 0; i < 4; i += 2) {
 ## 原子操作函数
 
 # 可重入函数
+
+
+# 设计模式
+## 单例模式
+单例模式（Singleton Pattern）是一种设计模式，旨在确保一个类只有一个实例，并提供全局访问点。单例模式在C++中有多种实现方式，常见的有懒汉式（Lazy Initialization）和饿汉式（Eager Initialization）。
+
+### 懒汉式单例模式（Lazy Initialization）
+懒汉式单例模式在第一次使用时才创建实例，适用于需要延迟加载的场景。
+
+#### 实现方式
+```cpp
+#include <iostream>
+#include <mutex>
+
+class Singleton {
+public:
+    // 获取实例的静态方法
+    static Singleton* getInstance() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (instance_ == nullptr) {
+            instance_ = new Singleton();
+        }
+        return instance_;
+    }
+
+    // 删除拷贝构造函数和赋值运算符
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+    // 供外界调用的示例方法
+    void doSomething() {
+        std::cout << "Doing something..." << std::endl;
+    }
+
+    // 析构函数
+    ~Singleton() {
+        std::cout << "Singleton destroyed" << std::endl;
+    }
+
+private:
+    // 私有构造函数
+    Singleton() {
+        std::cout << "Singleton created" << std::endl;
+    }
+
+    static Singleton* instance_;
+    static std::mutex mutex_;
+};
+
+// 初始化静态成员变量
+Singleton* Singleton::instance_ = nullptr;
+std::mutex Singleton::mutex_;
+
+int main() {
+    Singleton* s1 = Singleton::getInstance();
+    s1->doSomething();
+
+    Singleton* s2 = Singleton::getInstance();
+    s2->doSomething();
+
+    return 0;
+}
+```
+
+#### 使用静态成员函数获取实例
+在懒汉模式中，获取实例的方法通常是一个静态成员函数。这是因为静态成员函数可以在没有实例的情况下被调用，而普通成员函数则需要通过类的实例来调用。以下是详细的解释：
+
+静态成员函数的特性：
+- **无需实例**：静态成员函数属于类本身，而不是类的某个实例。因此，可以在没有创建任何实例的情况下调用静态成员函数。
+- **全局访问**：静态成员函数可以通过类名直接调用，为全局访问点提供了便利。
+
+在懒汉模式中，单例类的实例在第一次使用时才会被创建。如果获取实例的方法是普通成员函数，那么在调用该方法之前必须已经有一个实例存在，这就违背了单例模式的初衷。因此，获取实例的方法必须是静态成员函数。
+
+##### 静态成员函数与普通成员函数的区别
+静态成员函数：
+- **无需实例**：静态成员函数可以通过类名直接调用，而不需要实例。
+- **无法访问非静态成员**：静态成员函数不能访问类的非静态成员变量和非静态成员函数，因为它们没有 `this` 指针。
+- **共享数据**：静态成员函数可以访问静态成员变量，这些变量在所有实例之间共享。
+
+普通成员函数：
+- **需要实例**：普通成员函数必须通过类的实例来调用。
+- **可以访问所有成员**：普通成员函数可以访问类的所有成员变量和成员函数（包括静态和非静态）。
+- **有 `this` 指针**：普通成员函数有一个隐含的 `this` 指针，指向调用该函数的实例。
+
+##### 静态函数与静态成员函数的区别
+静态函数：
+- **全局作用域**：静态函数通常是指在文件作用域内的静态函数（使用 `static` 关键字修饰的函数），它们的作用范围仅限于定义它们的源文件。
+- **文件内可见**：静态函数在定义它们的源文件之外不可见，通常用于实现文件内的辅助功能。
+
+静态成员函数：
+- **类作用域**：静态成员函数是类的成员函数，属于类本身，而不是某个实例。
+- **类内可见**：静态成员函数可以在类的范围内访问，并且可以通过类名在全局范围内访问。
+
+##### 静态函数和普通函数的区别
+静态函数和普通函数在C++中的区别主要体现在它们的作用域、可见性和用途上。以下是详细的解释：
+
+###### 静态函数（Static Function）
+静态函数是指在文件作用域内使用 `static` 关键字修饰的函数。它们的作用范围仅限于定义它们的源文件。
+特性：
+1. **文件作用域**：
+   - 静态函数只能在定义它们的源文件中被调用，其他文件无法访问这些函数。
+   
+2. **内部链接**：
+   - 静态函数具有内部链接（internal linkage），这意味着它们在编译时不会暴露给其他翻译单元（translation units）。
+
+3. **用途**：
+   - 静态函数通常用于实现文件内的辅助功能，避免命名冲突和不必要的全局可见性。
+
+示例代码：
+```cpp
+#include <iostream>
+
+// 静态函数
+static void staticFunction() {
+    std::cout << "Static function called" << std::endl;
+}
+
+void anotherFunction() {
+    // 可以在同一文件中调用静态函数
+    staticFunction();
+}
+
+int main() {
+    // 可以在同一文件中调用静态函数
+    staticFunction();
+    return 0;
+}
+```
+
+###### 普通函数（Non-static Function）
+普通函数是没有使用 `static` 关键字修饰的函数。它们的作用范围可以是全局的，具体取决于它们的声明位置。
+
+特性：
+1. **全局作用域**：
+   - 普通函数可以在定义它们的源文件外部被调用，只要在其他文件中声明了该函数。
+   
+2. **外部链接**：
+   - 普通函数具有外部链接（external linkage），这意味着它们在编译时可以被其他翻译单元访问。
+
+3. **用途**：
+   - 普通函数用于实现全局功能，可以在多个文件中共享和调用。
+
+示例代码：
+```cpp
+#include <iostream>
+
+// 普通函数
+void normalFunction() {
+    std::cout << "Normal function called" << std::endl;
+}
+
+void anotherFunction() {
+    // 可以在同一文件中调用普通函数
+    normalFunction();
+}
+
+int main() {
+    // 可以在同一文件中调用普通函数
+    normalFunction();
+    return 0;
+}
+```
+
+###### 静态函数和普通函数的对比
+| 特性         | 静态函数 (Static Function)               | 普通函数 (Non-static Function)   |
+| ------------ | ---------------------------------------- | -------------------------------- |
+| **作用域**   | 文件作用域，只能在定义它们的源文件中调用 | 全局作用域，可以在多个文件中调用 |
+| **链接类型** | 内部链接（internal linkage）             | 外部链接（external linkage）     |
+| **可见性**   | 仅在定义它们的源文件中可见               | 可以在其他文件中声明并调用       |
+| **用途**     | 文件内的辅助功能，避免命名冲突           | 全局功能，可以在多个文件中共享   |
+
+###### 总结
+- **静态函数**：用于文件内部的辅助功能，具有内部链接，仅在定义它们的源文件中可见。
+- **普通函数**：用于全局功能，具有外部链接，可以在多个文件中共享和调用。
+
+选择使用哪种函数取决于具体的需求。如果你希望函数只在定义它的源文件中使用，避免命名冲突和不必要的全局可见性，可以选择静态函数。如果你希望函数在多个文件中共享和调用，可以选择普通函数。
+
+##### 示例代码
+以下是一个示例代码，展示了静态成员函数、普通成员函数和静态函数的区别：
+
+```cpp
+#include <iostream>
+
+class MyClass {
+public:
+    // 静态成员函数
+    static void staticMemberFunction() {
+        std::cout << "Static member function called" << std::endl;
+        // 无法访问非静态成员变量或非静态成员函数
+        // std::cout << "Non-static member variable: " << nonStaticMember << std::endl; // 错误
+    }
+
+    // 普通成员函数
+    void nonStaticMemberFunction() {
+        std::cout << "Non-static member function called" << std::endl;
+        std::cout << "Non-static member variable: " << nonStaticMember << std::endl;
+    }
+
+    // 静态成员变量
+    static int staticMember;
+
+    // 非静态成员变量
+    int nonStaticMember;
+
+    // 构造函数
+    MyClass() : nonStaticMember(42) {}
+};
+
+// 静态成员变量定义
+int MyClass::staticMember = 0;
+
+// 静态函数（文件作用域）
+static void staticFunction() {
+    std::cout << "Static function called" << std::endl;
+}
+
+int main() {
+    // 调用静态成员函数
+    MyClass::staticMemberFunction();
+
+    // 创建类的实例
+    MyClass obj;
+
+    // 调用普通成员函数
+    obj.nonStaticMemberFunction();
+
+    // 调用静态函数
+    staticFunction();
+
+    return 0;
+}
+```
+
+输出结果：
+```
+Static member function called
+Non-static member function called
+Non-static member variable: 42
+Static function called
+```
+
+#### 多线程安全
+在上面的单例模式中，`std::lock_guard<std::mutex>` 用于确保在多线程环境下对单例实例的访问是线程安全的。
+
+在多线程环境中，如果多个线程同时调用 `getInstance` 方法，有可能会导致多个线程同时检测到 `instance_` 为 `nullptr`，从而创建多个实例。这违背了单例模式的初衷，即保证一个类只有一个实例。
+
+`std::lock_guard` 是一个RAII（Resource Acquisition Is Initialization）类，用于在作用域内自动管理互斥锁的锁定和解锁。它的主要作用是确保在函数执行期间互斥锁被正确地锁定和解锁，以防止资源竞争和数据不一致。
+1. **锁定互斥锁**：
+   - 当 `std::lock_guard` 对象创建时，它会锁定传入的互斥锁，确保在 `getInstance` 方法执行期间，其他线程无法同时访问该方法。
+
+2. **自动解锁**：
+   - 当 `std::lock_guard` 对象超出作用域时（例如，函数返回时），它会自动解锁互斥锁，无需显式调用解锁操作。这减少了手动管理锁的复杂性和潜在的错误。
+
+#### 关键点
+- **线程安全**：使用 `std::mutex` 确保线程安全。
+- **延迟初始化**：实例在第一次调用 `getInstance` 时创建。
+- **防止拷贝和赋值**：删除拷贝构造函数和赋值运算符。
+
+#### 析构问题
+懒汉式单例在程序结束时不会自动销毁，需要手动管理其生命周期。可以通过 `atexit` 注册析构函数或智能指针来管理。
+
+静态变量的生命周期：
+1. **初始化**：
+   - 静态变量在程序启动时或在第一次使用时分配内存并初始化。
+
+2. **程序运行期间**：
+   - 静态变量在整个程序运行期间一直存在，并且在所有实例之间共享。
+
+3. **程序结束**：
+   - 当程序结束时，操作系统会回收静态变量所占用的内存，但不会自动调用其指向对象的析构函数。
+
+动态分配的内存：
+通过 `new` 操作符动态分配的内存需要显式释放。如果不显式释放，这些内存会在程序结束时由操作系统回收，但不会调用析构函数。这会导致资源泄漏（例如，文件句柄、网络连接等未被正确释放）。
+
+##### 提供显式释放方法
+
+```cpp
+class Singleton {
+public:
+    // 获取实例的静态方法
+    static Singleton* getInstance() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (instance_ == nullptr) {
+            instance_ = new Singleton();
+        }
+        return instance_;
+    }
+
+    // 显式删除实例的静态方法
+    static void destroyInstance() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (instance_ != nullptr) {
+            delete instance_;
+            instance_ = nullptr;
+        }
+    }
+
+    // 禁止拷贝构造和赋值操作
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+private:
+    // 私有构造函数，防止外部实例化
+    Singleton() {
+        std::cout << "Singleton instance created" << std::endl;
+    }
+
+    // 私有析构函数，防止外部删除实例
+    ~Singleton() {
+        std::cout << "Singleton instance destroyed" << std::endl;
+    }
+
+    // 静态成员变量，存储单例实例
+    static Singleton* instance_;
+    // 互斥锁，用于保护实例创建
+    static std::mutex mutex_;
+};
+
+// 静态成员变量初始化
+Singleton* Singleton::instance_ = nullptr;
+std::mutex Singleton::mutex_;
+
+int main() {
+    // 获取单例实例
+    Singleton* instance1 = Singleton::getInstance();
+    Singleton* instance2 = Singleton::getInstance();
+
+    // 验证两个指针是否指向同一个实例
+    if (instance1 == instance2) {
+        std::cout << "Both pointers point to the same instance." << std::endl;
+    } else {
+        std::cout << "Different instances exist!" << std::endl;
+    }
+
+    // 显式删除单例实例
+    Singleton::destroyInstance();
+
+    return 0;
+}
+```
+
+##### 使用 `atexit` 函数
+
+```cpp
+class Singleton {
+public:
+    // 获取实例的静态方法
+    static Singleton* getInstance() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (instance_ == nullptr) {
+            instance_ = new Singleton();
+            std::atexit(&Singleton::destroyInstance);
+        }
+        return instance_;
+    }
+
+    // 禁止拷贝构造和赋值操作
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+private:
+    // 私有构造函数，防止外部实例化
+    Singleton() {
+        std::cout << "Singleton instance created" << std::endl;
+    }
+
+    // 私有析构函数，防止外部删除实例
+    ~Singleton() {
+        std::cout << "Singleton instance destroyed" << std::endl;
+    }
+
+    // 静态成员变量，存储单例实例
+    static Singleton* instance_;
+    // 互斥锁，用于保护实例创建
+    static std::mutex mutex_;
+
+    // 静态方法，用于删除单例实例
+    static void destroyInstance() {
+        delete instance_;
+        instance_ = nullptr;
+    }
+};
+
+// 静态成员变量初始化
+Singleton* Singleton::instance_ = nullptr;
+std::mutex Singleton::mutex_;
+
+int main() {
+    // 获取单例实例
+    Singleton* instance1 = Singleton::getInstance();
+    Singleton* instance2 = Singleton::getInstance();
+
+    // 验证两个指针是否指向同一个实例
+    if (instance1 == instance2) {
+        std::cout << "Both pointers point to the same instance." << std::endl;
+    } else {
+        std::cout << "Different instances exist!" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+### 懒汉模式2
+
+#### 实现方式
+
+```cpp
+#include <iostream>
+
+class Singleton {
+public:
+    // 获取实例的静态方法
+    static Singleton& getInstance() {
+        static Singleton instance; // 局部静态变量，第一次调用时初始化
+        return instance;
+    }
+
+    // 删除拷贝构造函数和赋值运算符
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+    // 供外界调用的示例方法
+    void doSomething() {
+        std::cout << "Doing something..." << std::endl;
+    }
+
+private:
+    // 私有构造函数
+    Singleton() {
+        std::cout << "Singleton created" << std::endl;
+    }
+    // 析构函数
+    ~Singleton() {
+        std::cout << "Singleton destroyed" << std::endl;
+    }
+
+};
+
+int main() {
+    Singleton& s1 = Singleton::getInstance();
+    s1.doSomething();
+
+    Singleton& s2 = Singleton::getInstance();
+    s2.doSomething();
+
+    return 0;
+}
+```
+
+#### 关键点
+- **线程安全**：使用 `static` 局部变量，C++11 及之后的标准保证其线程安全。
+- **防止拷贝和赋值**：删除拷贝构造函数和赋值运算符。
+
+#### 析构问题
+单例会在程序结束时自动销毁，不需要手动管理其生命周期。
