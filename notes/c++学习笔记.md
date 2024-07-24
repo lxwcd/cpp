@@ -103,9 +103,9 @@ C++ 的翻译过程是由一系列阶段组成的，每一个阶段都将执行�
 ## 删除注释的阶段
 删除注释虽然在 phase 3，而预处理在 phase 4，但因为在实际的编译器实现中，预处理的活动通常被认为是一个整体，包括宏替换、包含处理和注释去除等操作。但如果按照C++标准中定义的翻译阶段来考虑，这些活动实际是分布在几个不同的逻辑阶段。
 
-尽管在传统的讨论和编译器的实际执行过程中，我们通常将移除注释视为预处理的一部分，但根据C++的翻译阶段来看，移除注释实际上是在预处理动作（第4阶段）之前，作为记号生成过程（第3阶段）的一部分完成的。
+尽管在传统的讨论和编译器的实际执行过程中，通常将移除注释视为预处理的一部分，但根据C++的翻译阶段来看，移除注释实际上是在预处理动作（第4阶段）之前，作为记号生成过程（第3阶段）的一部分完成的。
 
-这种分区可能在理论上有其意义，以确保语言的规范性和各实现之间的一致性，但在日常使用和讨论中，人们往往会简单地将所有这些活动总称为预处理。
+这种分区可能在理论上有其意义，以确保语言的规范性和各实现之间的一致性，但在日常使用和讨论中，往往会简单地将所有这些活动总称为预处理。
 
 ## 预处理指令
 预处理指令是C++中一部分，在编译过程的最开始被处理。它们指导编译器在实际编译之前对源代码进行一些预处理。
@@ -119,134 +119,149 @@ C++ 的翻译过程是由一系列阶段组成的，每一个阶段都将执行�
 #include "myheader.h" // 包含用户定义的头文件
 ```
 
-### `#define`
+### 宏
+> [Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macros.html) 
+
 在 C++ 中，`#define` 指令是预处理器的一部分，用于定义宏。这意味着在编译之前，预处理器会将所有宏名称替换为其定义。`#define` 可以用来定义各种类型的常量，如整型、字符、字符串等。
 
-#### 整型
+#### Object-like Macros
+> [Object-like Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Object-like-Macros.html) 
 
+- 整型
+```cpp
+#define NUM 14
+```
+
+- 浮点数
 ```cpp
 #define PI 3.14
 ```
-
 这里定义了一个名为 `PI` 的宏，其值为 `3.14`。这个宏在预处理阶段会被直接替换为 `3.14`，因此它几乎不占用任何内存空间。
 
-#### 字符
-
+- 字符
 ```cpp
 #define NEWLINE '\n'
 ```
+在这个例子中，定义了一个名为 `NEWLINE` 的宏，用来代表换行符。和之前一样，这个宏在编译期被替换成对应的值，内存占用微乎其微。
 
-在这个例子中，我们定义了一个名为 `NEWLINE` 的宏，用来代表换行符。和之前一样，这个宏在编译期被替换成对应的值，内存占用微乎其微。
-
-#### 字符串
-
+- 字符串
 ```cpp
 #define GREETING "Hello, World!"
 ```
+这里，定义了一个包含字符串的宏 `GREETING`。在编译时，所有的 `GREETING` 实例将被替换为 `"Hello, World!"`。字符串常量通常被存储在程序的只读数据段中。
 
-这里，我们定义了一个包含字符串的宏 `GREETING`。在编译时，所有的 `GREETING` 实例将被替换为 `"Hello, World!"`。字符串常量通常被存储在程序的只读数据段中。
+#### 多行宏书写
+```cpp
+#define NUMBERS 1, \
+                2, \
+                3
+int x[] = { NUMBERS };
+     → int x[] = { 1, 2, 3 };
+```
 
-#### 复合类型定义
+#### 宏定义生效的作用域
+> The C preprocessor scans your program sequentially. Macro definitions take effect at the place you write them. 
 
-宏也可以用来定义更复杂的表达式或代码片段。
+```cpp
+foo = X; // X is not defined yet
+#define X 4
+bar = X;
+```
+
+#### Function-like Macros
+> [Function-like Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Function-like-Macros.html) 
+> To define a function-like macro, you use the same ‘#define’ directive, but you put a pair of parentheses **immediately** after the macro name. 
 
 ```cpp
 #define SQUARE(x) ((x) * (x))
 ```
-
 这个宏 `SQUARE` 接受一个参数，并计算其平方。它展示了如何将宏用作函数。但是需要注意的是，宏没有作用域的概念，也不进行类型检查，因此它们在复杂表达式中可能产生意想不到的副作用。
 
-#### 可变参数宏
-这样可以传递任意数量的参数给宏，`__VA_ARGS__` 会被替换为这些参数。
+##### 宏参数
+> [Macro Arguments (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Arguments.html) 
+> Leading and trailing whitespace in each argument is dropped, and all whitespace between the tokens of an argument is reduced to a single space. Parentheses within each argument must balance; a comma within such parentheses does not end the argument. 
+> Whitespace is not a preprocessing token, so if a macro foo takes one argument, foo () and foo ( ) both supply it an empty argument. Previous GNU preprocessor implementations and documentation were incorrect on this point, insisting that a function-like macro that takes a single argument be passed a space if an empty argument was required.
 
-可变参数宏（Variadic Macros）是C++预处理器的一个特性，它允许宏接受可变数量的参数。这是在C++11及其之后的标准中支持的特性，使得宏能够更灵活地处理不同数量的输入参数。
+宏参数中的空白字符会被忽略。
 
-使用 `...` 来指示宏定义中的可变部分，并且可以使用 `__VA_ARGS__` 宏来表示所有的可变参数列表。这使得开发人员可以书写接受任意数量参数的宏。
+#### 多层嵌套宏的扩展
+> [Macro Arguments (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Arguments.html) 
+> All arguments to a macro are completely macro-expanded before they are substituted into the macro body. After substitution, the complete text is scanned again for macros to expand, including the arguments.
 
-一个简单的日志宏，它接收可变数量的参数并打印：
 
+#### `#` Stringizing 字符串化
+> [Stringizing (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html) 
+
+在宏中，`#` 操作符会把跟随它的宏参数转换成一个字符串字面量：
 ```cpp
-#include <iostream>
-
-// 定义一个可变参数的宏，用来打印日志信息。
-#define LOG(format, ...) printf(format, __VA_ARGS__)
-
-int main() {
-    // 使用宏来打印不同数量的参数
-    LOG("This is a log message: %s\n", "Hello, World!");
-    LOG("This is a log message with two parameters: %s %d\n", "Number", 1);
-
-    return 0;
-}
+#define TO_STRING(x) #x
 ```
-
-在这个例子中，我们定义了一个 `LOG` 宏，它可以接受一个字符串格式，然后是一个可变数量的参数，类似于 `printf` 的功能。`LOG` 宏首先接收一个格式字符串，然后是使用 `...` 表示的可变参数，它们在宏内部通过 `__VA_ARGS__` 引用。
-
-##### 处理不同数据类型
-可变参数宏通过使用 `...` 和 `__VA_ARGS__` 来处理不同类型的输入。在宏中，`...` 表示宏可以接受任意数量的参数，而 `__VA_ARGS__` 是一个特殊的宏，它表示所有传递给可变参数宏的参数列表。
-
-要处理不同类型的输入，通常会结合使用格式化字符串（就像在 `printf` 函数中一样）与 `__VA_ARGS__`。这样做允许创建类似于标准C库函数 `printf` 的宏，它能够将不同类型的变量插入到字符串中去。
-
-```cpp
-#include <cstdio>
-
-// 定义一个 LOG 宏，接收一个格式化字符串和可变参数
-#define LOG(format, ...) printf(format, __VA_ARGS__)
-
-int main() {
-    int num = 10;
-    float pi = 3.14f;
-    const char* str = "example";
-
-    // 使用宏来打印不同类型的参数
-    LOG("Integer: %d, Float: %.2f, String: %s\n", num, pi, str);
-
-    return 0;
-}
-```
-
-上面的 `LOG` 宏可以接收不同类型的输入参数，比如 `int`、`float` 和 `const char*`，并且能够将它们格式化成字符串输出。
-
-在实际使用时，应该要保证提供给宏的格式化字符串与传递的参数类型相匹配，因为预处理器不会进行类型检查，错误的匹配可能会导致未定义的行为。
-
-##### 内存占用
-在编译时，可变参数宏会随着宏展开，因此它们不会独立占用内存空间，而是会根据宏替换后的代码量来决定增加的内存消耗。
-
-##### 初始化
-与普通的宏一样，可变参数宏没有运行时的初始化过程，它们仅在编译阶段进行文本替换。
-
-使用可变参数宏可以让宏的应用更加灵活，但是它们也继承了宏的缺点，比如类型不安全、可能出现的复杂的宏展开问题等。这些都是开发者在使用可变参数宏时需要注意的问题。
+调用 `TO_STRING(123)` 会产生 `"123"`。
 
 #### `##` 连接操作符
-在宏定义中，`##` 操作符可以用来连接两个宏参数或宏参数与其他文本。它会删除连接符两边的空白，并将它们拼接成一个单一的标识符：
+> [Concatenation (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 
+> It is often useful to merge two tokens into one while expanding macros. This is called token pasting or token concatenation. 
+> Keep in mind that the C preprocessor converts comments to whitespace before macros are even considered. Therefore, you cannot create a comment by concatenating ‘/’ and ‘*’. 
+> You can put as much whitespace between ‘##’ and its operands as you like, including comments, and you can put comments in arguments that will be concatenated. 
 
-如使用 `##` 操作符连接两个令牌，以形成一个新的变量名。
+- 在宏定义中，`##` 操作符可以用来连接两个宏参数或宏参数与其他文本。它会删除连接符两边的空白，并将它们拼接成一个单一的标识符。
+- 不同通过宏创建注释，因为注释在宏展开前就被处理了。
+- `##` 的前后空白会被忽略。
+
+##### 宏连接生成不同的函数
+在软件开发中，宏可以用于实现元编程，即在编译时生成代码。这在处理大量相似但有细微差别的代码时非常有用，例如在创建大量具有相似功能的类或函数时。
+
+**CONCAT** 宏通过 `##` 运算符连接两个参数，生成一个新的标识符。这在需要动态生成代码时非常有用，尤其是在模板元编程中。
+
+假设需要开发一个需要支持多种类型的资源加载器的应用程序，每种资源类型都有其特定的加载函数。可以使用 **CONCAT** 宏来动态生成这些加载函数的名称。
+
 ```cpp
 #include <iostream>
+#include <string>
 
-#define CONCAT(a, b) a##b
+// 定义 CONCAT 宏来连接资源类型和函数后缀
+#define CONCAT(name, suffix) name##suffix
+
+// 定义资源加载函数模板
+#define DEFINE_LOADER(type) \
+    void CONCAT(load_, type)(const std::string& file_path) { \
+        std::cout << "Loading " << #type << " from " << file_path << std::endl; \
+        // 加载资源的实现细节 \
+    }
+
+// 根据资源类型定义加载函数
+DEFINE_LOADER(image)
+DEFINE_LOADER(model)
+DEFINE_LOADER(sound)
 
 int main() {
-    int myVariable = 10;
-    int anotherVar = 20;
-
-    // 使用 CONCAT 宏来连接 "my" 和 "Variable"，构成 "myVariable"
-    std::cout << "myVariable: " << CONCAT(my, Variable) << std::endl;
-    
-    // 尝试另一个例子，连接 "another" 和 "Var"，构成 "anotherVar"
-    std::cout << "anotherVar: " << CONCAT(another, Var) << std::endl;
+    load_image("path/to/image.png");
+    load_model("path/to/model.obj");
+    load_sound("path/to/sound.wav");
 
     return 0;
 }
 ```
 
-最后的程序输出将会是：
-```cpp
-myVariable: 10
-anotherVar: 20
-```
+作用：
+- **减少重复代码**：通过宏，避免了为每种资源类型编写重复的加载函数定义。
+- **提高代码的可维护性**：当需要添加新的资源类型时，只需添加新的 `DEFINE_LOADER` 宏调用即可。
 
-这样，就成功地使用 `##` 操作符连接了两个令牌，并且利用这个特性来访问具体的变量。这个技巧在需要根据条件动态生成变量名或函数名时非常有用。
+在这个示例中，我们使用 **DEFINE_LOADER** 宏来定义不同资源类型的加载函数。这个宏内部使用了 **CONCAT** 宏来生成具体的函数名，如 `load_image`、`load_model` 和 `load_sound`。这样，就可以在 `main` 函数中直接调用这些动态生成的加载函数，而不需要为每种资源类型手动编写加载函数。
+
+##### 宏连接生成枚举变量和结构体成员变量
+> [Concatenation (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 
+
+```cpp
+#define COMMAND(NAME)  { #NAME, NAME ## _command }
+
+struct command commands[] =
+{
+  COMMAND (quit),
+  COMMAND (help),
+  …
+};
+```
 
 ##### 注意事项
 在使用 `##` 连接操作符时，需要注意以下几个方面：
@@ -295,35 +310,196 @@ CONCAT(FIRST_HALF, SECOND_HALF)
 
 这是一个非常有用的技巧，尤其是当宏的参数本身也是宏时。通过这种间接的方式，我们可以确保任何参数宏都会在连接之前被完全展开。这样不仅避免了预处理器相关错误，还提高了宏定义的灵活性和可用性。
 
-#### `#` 字符串化操作符
-在宏中，`#` 操作符会把跟随它的宏参数转换成一个字符串字面量：
+#### X Macro
+> [Serializing C++ with X-Macros](https://kewarken.medium.com/serializing-c-with-x-macros-f9cb84725b50) 
+> [X macro - Wikipedia](https://en.wikipedia.org/wiki/X_macro) 
 
 ```cpp
-#define TO_STRING(x) #x
+#include <iostream>
+
+// 定义枚举的 X Macro
+#define ENUM_LIST \
+    X(RED,    0) \
+    X(GREEN,  1) \
+    X(BLUE,   2)
+
+// 根据 X Macro 生成枚举
+enum Color {
+    #define X(name, value) name = value,
+    ENUM_LIST
+    #undef X
+};
+
+// 定义结构体成员的 X Macro
+#define STRUCT_MEMBERS \
+    X(int,    age) \
+    X(std::string, name) \
+    X(double, salary)
+
+// 根据 X Macro 生成结构体
+struct Person {
+    #define X(type, name) type name;
+    STRUCT_MEMBERS
+    #undef X
+};
+
+int main() {
+    // 使用枚举
+    Color c = GREEN;
+    std::cout << "Selected color: " << c << std::endl;
+
+    // 使用结构体
+    Person p;
+    p.age = 25;
+    p.name = "John Doe";
+    p.salary = 50000.0;
+
+    std::cout << "Person's age: " << p.age << ", name: " << p.name << ", salary: " << p.salary << std::endl;
+
+    return 0;
+}
+```
+```cpp
+#include <iostream>
+
+// 定义水果的 X Macro
+#define FRUITS(X) \
+    X(APPLE)     \
+    X(BANANA)   \
+    X(ORANGE)   \
+    X(GRAPE)
+
+// 用于生成枚举值的宏
+#define EXPAND_ENUM_FRUIT(name) name,
+// 用于生成 switch 语句中每个 case 分支的宏
+#define EXPAND_STRING_FRUIT(fruit) \
+  case fruit:  \
+    return #fruit;
+
+// 定义水果枚举类型
+enum fruits {
+  FRUITS(EXPAND_ENUM_FRUIT)
+};
+
+// 将水果转换为字符串的函数
+char* fruitToString(enum fruits value)
+{
+    switch (value) {
+      FRUITS(EXPAND_STRING_FRUIT)
+    default:
+        return "Unknown Fruit";
+    }
+}
+
+// 定义结构体成员的 X Macro
+#define STRUCT_MEMBERS(X) \
+    X(int,    quantity) \
+    X(double, price)
+
+#define EXPAND_STRUCT_FRUIT(type, name) type name;
+// 定义结构体
+struct FruitInfo {
+  STRUCT_MEMBERS(EXPAND_STRUCT_FRUIT)
+};
+
+
+int main() {
+    enum fruits f = APPLE;
+    std::cout << fruitToString(f) << std::endl;
+
+    FruitInfo info;
+    info.quantity = 10;
+    info.price = 5.5;
+
+    std::cout << "Quantity: " << info.quantity << ", Price: " << info.price << std::endl;
+
+    return 0;
+}
 ```
 
-调用 `TO_STRING(123)` 会产生 `"123"`。
+X Macro 的主要优点是：
+1. 减少代码重复：如果需要修改枚举或结构体成员的信息，只需在 X Macro 定义处进行更改，而无需在多个地方修改。
+2. 提高代码的可维护性：使得代码结构更加清晰和易于管理。
 
-#### 初始化
+然而，X Macro 也有一些潜在的缺点：
+1. 可读性可能会受到一定影响，对于不熟悉这种技术的开发者来说，理解起来可能会有困难。
+2. 预处理器的使用可能会导致一些复杂的错误，并且调试起来相对困难。
 
-使用 `#define` 定义的宏在预处理阶段就替换了，所以并不涉及运行时的初始化。这与变量初始化不同，宏没有存储位置，它们仅仅是文本替换。
+#### 可变参数宏
+> [Variadic Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html) 
 
-#### 内存占用
+可变参数宏（Variadic Macros）是C++预处理器的一个特性，它允许宏接受可变数量的参数。这是在C++11及其之后的标准中支持的特性，使得宏能够更灵活地处理不同数量的输入参数。
 
-由于 `#define` 定义的宏仅仅是文本替换，并不实际占用运行时内存。它们的"值"在编译时被插入到代码中，因此宏本身不会增加编译后程序的内存占用。
+使用 `...` 来指示宏定义中的可变部分，并且可以使用 `__VA_ARGS__` 宏来表示所有的可变参数列表。这使得开发人员可以书写接受任意数量参数的宏。
 
-### `#undef`
+一个简单的日志宏，它接收可变数量的参数并打印：
+```cpp
+#include <iostream>
 
-取消定义宏。
+// 定义一个可变参数的宏，用来打印日志信息。
+#define LOG(format, ...) printf(format, __VA_ARGS__)
+
+int main() {
+    // 使用宏来打印不同数量的参数
+    LOG("This is a log message: %s\n", "Hello, World!");
+    LOG("This is a log message with two parameters: %s %d\n", "Number", 1);
+
+    return 0;
+}
+```
+
+在这个例子中，定义了一个 `LOG` 宏，它可以接受一个字符串格式，然后是一个可变数量的参数，类似于 `printf` 的功能。`LOG` 宏首先接收一个格式字符串，然后是使用 `...` 表示的可变参数，它们在宏内部通过 `__VA_ARGS__` 引用。
+
+##### 处理不同数据类型
+可变参数宏通过使用 `...` 和 `__VA_ARGS__` 来处理不同类型的输入。在宏中，`...` 表示宏可以接受任意数量的参数，而 `__VA_ARGS__` 是一个特殊的宏，它表示所有传递给可变参数宏的参数列表。
+
+要处理不同类型的输入，通常会结合使用格式化字符串（就像在 `printf` 函数中一样）与 `__VA_ARGS__`。这样做允许创建类似于标准C库函数 `printf` 的宏，它能够将不同类型的变量插入到字符串中去。
 
 ```cpp
-#undef PI
+#include <cstdio>
+
+// 定义一个 LOG 宏，接收一个格式化字符串和可变参数
+#define LOG(format, ...) printf(format, __VA_ARGS__)
+
+int main() {
+    int num = 10;
+    float pi = 3.14f;
+    const char* str = "example";
+
+    // 使用宏来打印不同类型的参数
+    LOG("Integer: %d, Float: %.2f, String: %s\n", num, pi, str);
+
+    return 0;
+}
 ```
 
-### `#if`, `#elif`, `#else`, `#endif`
+上面的 `LOG` 宏可以接收不同类型的输入参数，比如 `int`、`float` 和 `const char*`，并且能够将它们格式化成字符串输出。
 
+在实际使用时，应该要保证提供给宏的格式化字符串与传递的参数类型相匹配，因为预处理器不会进行类型检查，错误的匹配可能会导致未定义的行为。
+
+#### predefined macros
+> [Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Predefined-Macros.html) 
+
+##### standard predefined macros
+> [Standard Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html) 
+
+##### common predefined macros
+> [Common Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html) 
+
+##### system-specific predefined macros
+> [System-specific Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/System-specific-Predefined-Macros.html) 
+
+##### c++ named operators
+> [C++ Named Operators (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/C_002b_002b-Named-Operators.html) 
+
+#### undefining and redefining macros
+> [Undefining and Redefining Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Undefining-and-Redefining-Macros.html) 
+
+- #define
+- #undef
+
+#### `#if`, `#elif`, `#else`, `#endif`
 这些指令用于条件编译。根据指定条件是否为真，可能会包括或排除代码部分。
-
 ```cpp
 #define DEBUG 1
 
@@ -332,60 +508,37 @@ CONCAT(FIRST_HALF, SECOND_HALF)
 #endif
 ```
 
-### `#ifdef` 和 `#ifndef`
-
+#### `#ifdef` 和 `#ifndef`
 这些指令检查一个宏是否被定义了，如果是(`#ifdef`)或不是(`#ifndef`)，则编译接下来的代码。
-
 ```cpp
 #ifndef PI
     #define PI 3.14
 #endif
 ```
 
-### `#error` 和 `#warning`
-
+#### `#error` 和 `#warning`
 如果遇到这些指令，预处理器将分别显示错误或警告信息。
-
 ```cpp
 #error This is an error message
 ```
 
-### `#pragma`
-
+#### `#pragma`
 特定于编译器的指令，用于控制编译器的特定功能。
-
 ```cpp
 #pragma once // 防止头文件被包含多次
 ```
 
-### `#line`
-
+#### `#line`
 这个指令可以改变编译器认为的当前行号和文件名。
-
 ```cpp
 #line 100 "newfilename.cpp"
 ```
 
-这些指令在编写跨平台代码、调试、以及编码复杂应用时非常有用。在编译期间，预处理器会根据这些指令修改源码，然后才开始实际编译过程。
+#### macro pitfalls
+> [Macro Pitfalls (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Pitfalls.html) 
 
-## 宏
-C++宏是预处理器指令，用于在编译之前对源代码进行文本替换。宏提供了一种强大的方式来抽象代码和避免重复。
-
-### 避免宏重复
-使用 `#pragma once` 或者头文件保护（include guards）来避免头文件被多次包含：
-
-```cpp
-#ifndef MYHEADER_H
-#define MYHEADER_H
-// 头文件内容
-#endif
-```
-
-### 宏的局限性
+#### 宏的局限性
 虽然宏功能强大，但也有一些缺点。宏只进行文本替换，没有类型检查，也不尊重作用域。过多使用宏可能会导致代码难以阅读和调试。
-
-### 宏函数的缺陷
-在C++中，过多地使用宏函数通常并不推荐，主要原因有以下几点：
 
 1. **类型不安全**：宏进行的是文本替换，不会进行类型检查，这可能导致类型错误或不一致，而在编译时不会报错。
 
