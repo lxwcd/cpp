@@ -575,14 +575,7 @@ int product = (1 +
 ```
 
 ## 翻译单元
-多个翻译单元是指一个程序被分割成多个源代码文件，每个文件被单独编译成目标文件。在C++中，源文件通常是以`.cpp`或`.cxx`等后缀结尾的文件，而翻译单元则是指编译器用来生成单个目标文件的源代码加上其所包含的全部头文件。
-
-简单来说，当编译一个C++程序时：
-1. 编译器逐个处理程序中的每个源文件。
-2. 在编译过程中，源文件中的`#include`指令会告诉编译器插入相应的头文件内容。
-3. 完成这种插入后，编译器就得到了一个完整的翻译单元——即包括了所有必需声明和代码实现的源文件。
-4. 编译器接着编译这个翻译单元，生成对应的目标文件`.o`或`.obj`等文件。
-5. 最后，链接器（Linker）将所有的目标文件链接在一起，形成最终的可执行程序或库文件。
+多个翻译单元是指一个程序被分割成多个源代码文件，每个文件被单独编译成目标文件。在C++中，源文件通常是以`.cpp`后缀结尾的文件，而翻译单元则是指编译器用来生成单个目标文件的源代码加上其所包含的全部头文件。
 
 在多翻译单元的项目中，变量和函数的声明需要在多个单元中保持一致，如果一个全局变量或者函数被多个翻译单元使用，它的定义应该存放在一个单独的源文件中，而在其他需要使用它的源文件中，通过extern关键字声明它的存在。
 
@@ -591,7 +584,7 @@ int product = (1 +
 ## 字符串多行显示
 
 ### 1. 字符串连接
-另一种实现多行字符串的方法是通过在编译时自动进行的字符串连接。在 C++ 中如果将两个或多个字符串字面量放置在一起，它们会自动连接成一个单独的字符串字面量。使用这种方式时，你可以简单地将每行字符串分别写在新的一行，这样代码会更加清晰。
+一种实现多行字符串的方法是通过在编译时自动进行的字符串连接。在 C++ 中如果将两个或多个字符串字面量放置在一起，它们会自动连接成一个单独的字符串字面量。
 
 ```cpp
 #include <iostream>
@@ -606,8 +599,10 @@ int main() {
 ```
 
 ### 2. 使用 Raw String Literals（原生字符串字面量）
-从 C++11 开始，C++ 引入了原生字符串字面量（Raw String Literals），使得编写包含多行的字符串字面量变得更简单。原生字符串字面量通过 `R"delimiter( [text] )delimiter"` 的形式使用，其中 `delimiter` 是一个可选的自定义分隔符，可以为空。使用原生字符串字面量时，你可以直接在字符串中加入新行，而无需手动添加 `\n`。
+C++11 引入了 raw string literals（原始字符串字面量），它允许开发者在字符串中包含任意字符，包括换行符和引号。这对于处理多行字符串、正则表达式或包含特殊字符的文件路径非常有用。
+原生字符串字面量通过 `R"delimiter(...)delimiter"` 的形式使用，其中 `delimiter` 是一个可选的自定义分隔符，可以为空。使用原生字符串字面量时，可以直接在字符串中加入新行，而无需手动添加 `\n`。
 
+#### 多行字符串
 ```cpp
 #include <iostream>
 
@@ -620,6 +615,73 @@ This is the third line.)";
 }
 ```
 
+#### 字符串中包含引号
+```cpp
+#include <iostream>
+
+int main() {
+    auto rawStr = R"(Hello, "world"!)";
+    std::cout << rawStr << std::endl;
+    return 0;
+}
+```
+输出：
+```
+Hello, "world"!
+```
+
+#### 使用分隔符
+如果不使用分隔符，那如果字符串中有 `)"` 则会认为字符串已结束，如：
+```cpp
+#include <iostream>
+
+int main() {
+    auto delimStr = R"(a
+)\)"
+a""
+e)";
+    std::cout << delimStr << std::endl;
+    return 0;
+}
+``` 
+上面代码会报错，但如果加一个分隔符，则能正确识别字符串结束的地方：
+```cpp
+#include <iostream>
+
+int main() {
+    auto delimStr = R"a(a
+)\)"
+a""
+e)a";
+    std::cout << delimStr << std::endl;
+    return 0;
+}
+```
+输出：
+```cpp
+a
+)\)"
+a""
+e
+```
+
+#### 包含特殊字符
+```cpp
+#include <iostream>
+
+int main() {
+    auto specialChars = R"(Special characters: \n \t \r \0)";
+    std::cout << specialChars << std::endl;
+    return 0;
+}
+```
+输出：
+```
+Special characters: 
+	 
+ 
+```
+
 ### 3. 在操作符或括号内换行
 这种方法是在表达式的操作符后或在括号内换行，而不影响代码的逻辑结构。这样做可以让每一行的长度保持在合理的范围内，提高代码的可读性。
 ```cpp
@@ -630,6 +692,7 @@ std::string str = "这是一个非常非常长的字符串，" +
 
 ## gcc
 > [gcc](https://gcc.gnu.org/)
+> [G++ and GCC (Using the GNU Compiler Collection (GCC))](https://gcc.gnu.org/onlinedocs/gcc-11.5.0/gcc/G_002b_002b-and-GCC.html) 
 
 - **gcc**：原本指 GNU C Compiler，用于编译 C 程序。随着时间的推移，gcc 发展成为一个编译器集合，支持多种编程语言，包括 C、C++、Objective-C、Fortran、Ada 和 Go 等。因此，gcc 也可以指代 GNU Compiler Collection。
 - **g++**：是 gcc 的一部分，专门用于编译 C++ 程序。它可以理解 C++ 的语法和链接 C++ 程序需要的库。
@@ -678,7 +741,7 @@ clean:
     rm -f *.o program
 ```
 
-在这个示例中，`all` 是一个自定义目标，它的依赖是 `program`，这意味着当你在命令行中运行 `make` 或 `make all` 时，`make` 将尝试构建 `program`。
+在这个示例中，`all` 是一个自定义目标，它的依赖是 `program`，这意味着当在命令行中运行 `make` 或 `make all` 时，`make` 将尝试构建 `program`。
 
 `program` 是最终目标，它依赖于 `main.o` 和 `helper.o`。如果这些对象文件不存在，或者相关的 `.c` 文件比它们新，`make` 将会执行定义在 `program` 规则下的命令来生成或更新 `program`。
 
