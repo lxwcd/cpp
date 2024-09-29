@@ -188,7 +188,6 @@ bar = X;
 > [Macro Arguments (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Arguments.html) 
 > All arguments to a macro are completely macro-expanded before they are substituted into the macro body. After substitution, the complete text is scanned again for macros to expand, including the arguments.
 
-
 #### `#` Stringizing 字符串化
 > [Stringizing (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html) 
 
@@ -205,7 +204,7 @@ bar = X;
 > You can put as much whitespace between ‘##’ and its operands as you like, including comments, and you can put comments in arguments that will be concatenated. 
 
 - 在宏定义中，`##` 操作符可以用来连接两个宏参数或宏参数与其他文本。它会删除连接符两边的空白，并将它们拼接成一个单一的标识符。
-- 不同通过宏创建注释，因为注释在宏展开前就被处理了。
+- 不能通过宏创建注释，因为注释在宏展开前就被处理了。
 - `##` 的前后空白会被忽略。
 
 ##### 宏连接生成不同的函数
@@ -253,7 +252,28 @@ int main() {
 > [Concatenation (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 
 
 ```cpp
+struct command
+{
+  char *name;
+  void (*function) (void);
+};
+
+struct command commands[] =
+{
+  { "quit", quit_command },
+  { "help", help_command },
+  …
+};
+```
+
+```cpp
 #define COMMAND(NAME)  { #NAME, NAME ## _command }
+
+struct command
+{
+  char *name;
+  void (*function) (void);
+};
 
 struct command commands[] =
 {
@@ -422,7 +442,7 @@ X Macro 的主要优点是：
 2. 提高代码的可维护性：使得代码结构更加清晰和易于管理。
 
 然而，X Macro 也有一些潜在的缺点：
-1. 可读性可能会受到一定影响，对于不熟悉这种技术的开发者来说，理解起来可能会有困难。
+1. 可读性可能会受到一定影响。
 2. 预处理器的使用可能会导致一些复杂的错误，并且调试起来相对困难。
 
 #### 可变参数宏
@@ -476,6 +496,91 @@ int main() {
 上面的 `LOG` 宏可以接收不同类型的输入参数，比如 `int`、`float` 和 `const char*`，并且能够将它们格式化成字符串输出。
 
 在实际使用时，应该要保证提供给宏的格式化字符串与传递的参数类型相匹配，因为预处理器不会进行类型检查，错误的匹配可能会导致未定义的行为。
+
+#### 条件编译宏
+条件编译在C/C++中是一个非常重要的功能，它允许根据不同的编译器、平台或配置来编译不同的代码。在C和C++混合编程中，`#if defined(__cplusplus)` 条件编译宏尤为重要。
+
+##### __cplusplus
+```cpp
+#if defined(__cplusplus)
+```
+
+在C++代码中，编译器会自动定义 `__cplusplus` 宏，因此可以使用这个宏来区分C和C++环境。在头文件中，这通常用于确保函数声明在C和C++编译器下都正确处理。
+
+1. **兼容C和C++编译器**:
+   - 在头文件中使用 `extern "C"` 包装函数声明，可以防止C++编译器对这些函数进行名称修饰（name mangling），从而使得C++编译后的库能够与C语言代码进行链接。
+
+2. **提供特定于C++的代码**:
+   - 使用条件编译宏，可以在头文件中添加C++特有的功能或接口，而不影响纯C代码的编译。
+
+```c
+#ifndef EXAMPLE_H
+#define EXAMPLE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void c_function(int a); // 兼容C和C++编译器的函数声明
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
+// 仅用于C++的接口
+void cpp_function(int a);
+#endif
+
+#endif // EXAMPLE_H
+```
+
+```cpp
+#include "example.h"
+#include <iostream>
+
+// C风格函数实现
+extern "C" void c_function(int a) {
+    std::cout << "C Function: " << a << std::endl;
+}
+
+// C++风格函数实现
+void cpp_function(int a) {
+    std::cout << "C++ Function: " << a << std::endl;
+}
+```
+
+```c
+#include "example.h"
+
+int main() {
+    c_function(10);
+    // cpp_function(20); // 无法在纯C代码中调用
+    return 0;
+}
+```
+
+1. **头文件 `example.h`**:
+   - **`#ifdef __cplusplus` 和 `extern "C"`**: 
+     - `#ifdef __cplusplus` 检查是否在C++编译器环境下。
+     - `extern "C"` 指示编译器按照C语言方式链接这些函数，防止C++名称修饰。
+     - `extern "C"` 仅在C++环境下有效，因此需要使用条件编译来封装。
+
+   - **仅用于C++的功能**:
+     - 利用 `#ifdef __cplusplus` 包含C++特有的函数声明，使它们仅在C++编译器环境下可见。
+     - 在C环境下，这些C++特性会被忽略，从而确保头文件在纯C编译器中依然能够正确工作。
+
+2. **源文件 `example.cpp`**:
+   - **C风格函数实现**:
+     - 使用 `extern "C"` 实现 `c_function`，确保其名称在链接阶段不会被修饰。
+   - **C++风格函数实现**:
+     - 直接实现 `cpp_function`，因为它只会在C++环境下使用，没有必要使用任何条件编译。
+
+3. **主程序文件 `main.c`**:
+   - **调用C风格函数**:
+     - 在纯C环境下调用 `c_function`，示例展示了如何兼容C和C++。
+   - **无法调用C++函数**:
+     - `cpp_function` 无法在纯C代码中调用，确保了纯C代码的纯粹性。
 
 #### predefined macros
 > [Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Predefined-Macros.html) 
@@ -583,7 +688,7 @@ int product = (1 +
 
 ## 字符串多行显示
 
-### 1. 字符串连接
+### 字符串连接
 一种实现多行字符串的方法是通过在编译时自动进行的字符串连接。在 C++ 中如果将两个或多个字符串字面量放置在一起，它们会自动连接成一个单独的字符串字面量。
 
 ```cpp
@@ -598,7 +703,7 @@ int main() {
 }
 ```
 
-### 2. 使用 Raw String Literals（原生字符串字面量）
+### 使用 Raw String Literals（原生字符串字面量）
 C++11 引入了 raw string literals（原始字符串字面量），它允许开发者在字符串中包含任意字符，包括换行符和引号。这对于处理多行字符串、正则表达式或包含特殊字符的文件路径非常有用。
 原生字符串字面量通过 `R"delimiter(...)delimiter"` 的形式使用，其中 `delimiter` 是一个可选的自定义分隔符，可以为空。使用原生字符串字面量时，可以直接在字符串中加入新行，而无需手动添加 `\n`。
 
@@ -643,7 +748,7 @@ e)";
     std::cout << delimStr << std::endl;
     return 0;
 }
-``` 
+```
 上面代码会报错，但如果加一个分隔符，则能正确识别字符串结束的地方：
 ```cpp
 #include <iostream>
@@ -682,7 +787,7 @@ Special characters:
  
 ```
 
-### 3. 在操作符或括号内换行
+### 在操作符或括号内换行
 这种方法是在表达式的操作符后或在括号内换行，而不影响代码的逻辑结构。这样做可以让每一行的长度保持在合理的范围内，提高代码的可读性。
 ```cpp
 std::string str = "这是一个非常非常长的字符串，" +
@@ -817,7 +922,17 @@ nmake # 在 Windows 上，如果是使用 nmake
 
 - **`rebuild`**: 当你需要从头开始重新构建你的工程时，你会执行一个 rebuild。在 Qt Creator 中执行 rebuild 会先执行一个 clean 操作清除所有之前编译生成的文件，然后像执行 build 那样重新编译整个工程。重建是用来确保所有东西都是最新的，通常在修改了 project 文件或者其他一些构建配置的时候需要做这个操作。
 
-总结一下，`qmake` 是用来生成 `Makefile` 文件的，而 `build` 是用 `Makefile` 来编译和链接生成最终的二进制文件，`rebuild` 则是完整地清除并重新构建整个项目。在日常开发中，你会频繁地进行 `build` 操作，而在工程配置变化后，你可能需要重新运行 `qmake`，并且在一些特定情况下执行 `rebuild`。
+`qmake` 是用来生成 `Makefile` 文件的，而 `build` 是用 `Makefile` 来编译和链接生成最终的二进制文件，`rebuild` 则是完整地清除并重新构建整个项目。在日常开发中，你会频繁地进行 `build` 操作，而在工程配置变化后，你可能需要重新运行 `qmake`，并且在一些特定情况下执行 `rebuild`。
+
+## compile build and make
+- compile
+这里的编译指将源代码转换成目标代码的过程。 在 C/C++ 中，这个过程通常由编译器完成。
+- build
+从源代码到可执行程序的一系列步骤。
+- make
+make 是一个自动化构建工具，用于管理和控制软件构建过程。
+
+## 不同编译器
 
 ## 声明
 > [declarations](https://en.cppreference.com/w/cpp/language/declarations)
@@ -882,7 +997,7 @@ int main() {
 }
 ```
 
-在这个例子中，我们在`globals.cpp`文件中定义了一个名为`globalVariable`的全局变量。然后，在`main.cpp`文件中，我们使用`extern`关键字声明了同名的全局变量，这表明该变量的定义在其他位置（即`globals.cpp`）。因此，当`main.cpp`访问`globalVariable`时，它实际上访问的是在`globals.cpp`中定义的变量。这就允许不同文件之间共享和访问同一个变量。
+在这个例子中，在`globals.cpp`文件中定义了一个名为`globalVariable`的全局变量。然后，在`main.cpp`文件中，使用`extern`关键字声明了同名的全局变量，这表明该变量的定义在其他位置（即`globals.cpp`）。因此，当`main.cpp`访问`globalVariable`时，它实际上访问的是在`globals.cpp`中定义的变量。这就允许不同文件之间共享和访问同一个变量。
 
 为了使上面的例子工作，需要编译两个文件并将它们链接在一起。使用g++的命令行示例如下：
 
@@ -1002,7 +1117,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
    - 通过动态内存分配（使用`new`或`malloc`）创建的对象。
    - 不会自动销毁，需要使用`delete`或`free`来手动释放内存。
 
-## 链接
+## linkage
 > [1](https://en.cppreference.com/w/cpp/language/storage_duration)
 > [2](https://blog.csdn.net/simonyucsdy/article/details/82728456)
 
@@ -1015,9 +1130,9 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 2. **内部链接（Internal Linkage）**：
     - 当定义了一些不希望在当前文件之外可见的全局静态变量或函数时，它们就有了内部链接。
-    - 在`.cc`文件中，可以将变量或函数放入一个未命名的命名空间，或者用`static`关键字声明，来赋予内部链接。
+    - 在`.c`文件中，可以将变量或函数放入一个未命名的命名空间，或者用`static`关键字声明，来赋予内部链接。
     - 这意味着这些名称在其他编译单元中是不可见的。其他编译单元如果声明了相同名称的实体，这两个实体是完全独立的。
-    - 在`.h`文件（头文件）中不应使用未命名命名空间或`static`关键字，因为头文件通常会被多个不同的`.cc`文件包含，而内部链接意味着局部于一个编译单元。
+    - 在`.h`文件（头文件）中不应使用未命名命名空间或`static`关键字，因为头文件通常会被多个不同的`.c`文件包含，而内部链接意味着局部于一个编译单元。
 
 3. **无链接（No Linkage）**：
     - 局部变量的名称，例如在函数内定义的变量，具有无链接属性。
@@ -1025,12 +1140,20 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 在C++的编程实践中，合理使用链接属性可以更好地控制程序的模块化和封装，防止命名冲突，并且可以管理好程序的符号可见性。如上所述，可以通过将不需要跨文件共享的声明移入未命名命名空间或声明为`static`来实现内部链接。这是一种实用的封装手段，可用于隐藏辅助功能和细节实现，以免在文件间不小心产生冲突或误用。
 
-## 内存管理
-> [虚拟内存](https://xiaolincoding.com/os/3_memory/vmem.html#虚拟内存)
+## scaler type
+> [C++ named requirements: ScalarType - cppreference.com](https://en.cppreference.com/w/cpp/named_req/ScalarType) 
+
+
+
 
 ## 初始化
 > [Initialization](https://en.cppreference.com/w/cpp/language/initialization)
 > [Back to Basics: Initialization in C++ - Ben Saks - CppCon 2023](https://www.youtube.com/watch?v=_23qmZtDBxg&ab_channel=CppCon) 
+
+If no initializer is specified for an object, the object is default-initialized. 
+If no initializer is specified for a reference, the program is ill-formed.
+If the initializer specified for an object is () (cannot appear in declarators due to the syntax restriction), the object is value-initialized. 
+If the initializer specified for a reference is (), the program is ill-formed.
 
 定义一个变量时，例如 `int a;`，它会在内存中为变量 `a` 腾出空间，但不会自动给它赋值。这是定义阶段。
 
@@ -1040,6 +1163,24 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 所以定义和初始化可以在同一行代码中完成，但它们描述的是不同的操作和阶段。
 
+### copy-initialization
+> [Copy-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/copy_initialization) 
+
+### aggregate initialization
+> [Aggregate initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/aggregate_initialization) 
+
+```cpp
+int x[] = {1, 3, 5}; // x has 3 elements
+ 
+struct Y { int i, j, k; };
+ 
+Y y[] = {1, 2, 3, 4, 5, 6}; // y has only 2 elements:
+                            // 1, 2 and 3 appertain to y[0],
+                            // 4, 5 and 6 appertain to y[1]
+ 
+int z[] = {} // Error: cannot declare an array without any element
+```
+
 ### direct-initialization
 > [Direct-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/direct_initialization) 
 
@@ -1047,6 +1188,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 - built-in types
 ```cpp
+int i = 5;
 int x(5);
 double y(2.3);
 ```
@@ -1062,6 +1204,130 @@ std::string s2(s1); //调用拷贝构造函数，但还是 direct initialization
 
 - This is the initialization performed when an object is constructed with an empty initializer.
 
+```cpp
+T ()	(1)	
+new T ()	(2)	
+Class::Class(...) : member () { ... }	(3)	
+T object {};	(4)	(since C++11)
+T {}	(5)	(since C++11)
+new T {}	(6)	(since C++11)
+Class::Class(...) : member {} { ... }	(7)	(since C++11)
+```
+
+The effects of value-initialization are:
+- If T is a (possibly cv-qualified) class type:
+    - If the default-initialization for T selects a constructor, and the constructor is not user-declared(until C++11)user-provided(since C++11), the object is first zero-initialized.
+    - In any case, the object is default-initialized.
+- Otherwise, if T is an array type, each element of the array is value-initialized.
+- Otherwise, the object is zero-initialized.
+
+```cpp
+int i = {};        // 值初始化，i 被初始化为 0
+int j;            // 值初始化，j 被初始化为 0
+int* p = {};      // 值初始化，p 被初始化为 nullptr
+int* q;           // 值初始化，q 被初始化为 nullptr
+int a[3] = {}; // 值初始化 所有元素初始化为 0
+int a[3] = {0}; // 不是值初始化，仅显示将第一个元素初始化为 0
+```
+
+```cpp
+#include <cassert>
+#include <iostream>
+#include <string>
+#include <vector>
+ 
+struct T1
+{
+    int mem1;
+    std::string mem2;
+    virtual void foo() {} // make sure T1 is not an aggregate
+}; // implicit default constructor
+ 
+struct T2
+{
+    int mem1;
+    std::string mem2;
+    T2(const T2&) {} // user-provided copy constructor
+};                   // no default constructor
+ 
+struct T3
+{
+    int mem1;
+    std::string mem2;
+    T3() {} // user-provided default constructor
+};
+ 
+std::string s{}; // class => default-initialization, the value is ""
+ 
+int main()
+{
+    int n{};                // scalar => zero-initialization, the value is 0
+    assert(n == 0);
+    double f = double();    // scalar => zero-initialization, the value is 0.0
+    assert(f == 0.0);
+    int* a = new int[10](); // array => value-initialization of each element
+    assert(a[9] == 0);      //          the value of each element is 0
+    T1 t1{};                // class with implicit default constructor =>
+    assert(t1.mem1 == 0);   //     t1.mem1 is zero-initialized, the value is 0
+    assert(t1.mem2 == "");  //     t1.mem2 is default-initialized, the value is ""
+//  T2 t2{};                // error: class with no default constructor
+    T3 t3{};                // class with user-provided default constructor =>
+    std::cout << t3.mem1;   //     t3.mem1 is default-initialized to indeterminate value
+    assert(t3.mem2 == "");  //     t3.mem2 is default-initialized, the value is ""
+    std::vector<int> v(3);  // value-initialization of each element
+    assert(v[2] == 0);      // the value of each element is 0
+    std::cout << '\n';
+    delete[] a;
+}
+```
+
+### reference initalization
+> [Reference initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/reference_initialization) 
+
+If the entity being initialized is a reference, see reference initialization.
+
+### Zero-initialization
+> [Zero-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/zero_initialization) 
+
+Sets the initial value of an object to zero.
+
+Zero-initialization is performed in the following situations:
+- For every named variable with static or thread-local(since C++11) storage duration that is not subject to constant initialization, before any other initialization.
+```cpp
+static T object ;
+```
+- As part of value-initialization sequence for non-class types and for members of value-initialized class types that have no constructors, including value initialization of elements of aggregates for which no initializers are provided.
+```cpp
+T () ;
+T t = {} ;
+
+T {} ; (since C++11)
+```
+- When an array of any character type is initialized with a string literal that is too short, the remainder of the array is zero-initialized.
+```cpp
+CharT array [ n ] = " short-sequence ";	
+```
+
+The effects of zero-initialization are:
+- If T is a scalar type, the object is initialized to the value obtained by explicitly converting the integer literal ​0​ (zero) to T.
+- If T is a non-union class type:
+    - all padding bits are initialized to zero bits,
+    - each non-static data member is zero-initialized,
+    - each non-virtual base class subobject is zero-initialized, and
+    - if the object is not a base class subobject, each virtual base class subobject is zero-initialized.
+- If T is a union type:
+    - all padding bits are initialized to zero bits, and
+    th object’s first non-static named data member is zero-initialized.
+- If T is array type, each element is zero-initialized.
+- If T is reference type, nothing is done.
+
+### 列表初始化
+> [List-initialization (since C++11) - cppreference.com](https://en.cppreference.com/w/cpp/language/list_initialization) 
+
+#### Direct-list-initialization
+
+#### Copy-list-initialization
+
 ### 默认初始化
 > [Initialization](https://en.cppreference.com/w/cpp/language/initialization)
 > [default initialization](https://en.cppreference.com/w/cpp/language/default_initialization)
@@ -1069,7 +1335,7 @@ std::string s2(s1); //调用拷贝构造函数，但还是 direct initialization
 #### 内置类型的局部变量
 如果没有显式初始化，它们不会被初始化。它们的初始值是未定义的。
 
-#### 非类类型的静态和线程局部变量
+#### 非类的静态和线程局部变量
 > [static local variables](https://en.cppreference.com/w/cpp/language/storage_duration#Static_local_variables)
 
 如果没有显示初始化，在程序启动（对于全局或命名空间作用域的静态变量）或线程启动（对于线程局部变量）时被零初始化。
@@ -1127,7 +1393,6 @@ private:
 
 **优点：**
 - 灵活性高：允许根据构造函数的参数动态初始化成员变量。
-- 效率高：对于某些类型（例如，引用成员或const成员），必须在初始化列表中进行初始化。
 
 **缺点：**
 - 重复性：如果类有多个构造函数，且多个构造函数都需要初始化相同的成员，可能会导致代码重复。
@@ -1180,8 +1445,9 @@ If multiple threads attempt to initialize the same static local variable concurr
 
 在C++11及其后续版本中，允许在类体内给非静态成员变量提供一个初始值，这种方式叫做默认成员初始化器。这样做并不会引发实际的初始化行为，它只是提供了一份初始值的备份。当对象被创建时（也就是在对象的构造函数调用时）如果在初始化列表中明确地初始化了该成员，那么成员初始化器所指定的初始值就会被忽略，否则就会使用成员初始化器提供的初始值进行初始化。
 
-
 ## extern
+> [C++ keyword: extern - cppreference.com](https://en.cppreference.com/w/cpp/keyword/extern) 
+
 在C++编程中，`extern`关键字非常重要，它用于声明一个变量或函数是在别处定义的，这意味着使用`extern`可以在多个文件之间共享全局变量和函数。
 
 ### `extern`的关键点
@@ -1192,7 +1458,7 @@ If multiple threads attempt to initialize the same static local variable concurr
 
 3. **避免重复定义错误**: 如果没有`extern`，在多个文件中声明同一个全局变量会导致重复定义错误。使用`extern`可以避免这个问题。
 
-### 完整示例
+### 示例
 
 考虑一个项目，其中包含两个文件：`globals.cpp`和`main.cpp`。
 
@@ -1238,12 +1504,163 @@ Global variable value: 42
 
 使用`extern`关键字确保了在`main.cpp`中能正确访问在`globals.cpp`中定义的`globalVariable`变量，这展示了如何在C++中跨文件共享全局变量。
 
-# 静态变量
+## extern "C"
+`extern` 关键字是C和C++中的一个存储类说明符，用于声明变量和函数的外部链接。这意味着它们的定义可能位于其他文件中。这在编写跨文件程序时尤其关键，通过`extern`可以共享数据和函数，而无需重复定义它们。
 
-## 初始化
-在C++中，静态变量的初始化时机取决于变量的定义位置和类型。主要有两类静态变量：**静态局部变量**和**静态全局变量**（包括静态成员变量）。它们的初始化时机如下：
+### `extern` 关键字的主要用途
 
-### 静态局部变量
+1. **共享全局变量**:
+    - 允许某一文件中的全局变量可以被其他文件访问。
+    - 避免重复定义同一变量，从而节省内存并确保数据一致。
+
+2. **函数声明**:
+    - 默认情况下，函数声明带有外部链接。因此，`extern`通常省略，因为声明函数时其默认链接类型就是外部链接。
+
+3. **与 `extern "C"` 配合使用**:
+    - 在C++中，使函数或变量按照C语言的方式进行链接，以避免编译器对名称进行修饰（name mangling）。
+
+### 使用`extern`的示例
+
+#### 共享全局变量
+
+假设我们有两个文件：`file1.c` 和 `file2.c`，它们需要共享一个全局变量。
+
+文件结构：
+```
+project/
+|-- file1.c
+|-- file2.c
+|-- main.c
+```
+
+**在 `file1.c` 中定义全局变量:**
+
+```c
+// file1.c
+#include <stdio.h>
+
+int sharedVariable = 42;
+
+void modifySharedVariable(int newValue) {
+    sharedVariable = newValue;
+    printf("Shared Variable modified to %d in file1.c\n", sharedVariable);
+}
+```
+
+**在 `file2.c` 中声明并使用该全局变量:**
+
+```c
+// file2.c
+#include <stdio.h>
+
+extern int sharedVariable;
+
+void printSharedVariable() {
+    printf("Shared Variable in file2.c is %d\n", sharedVariable);
+}
+```
+
+**主程序文件 `main.c`：**
+
+```c
+// main.c
+#include <stdio.h>
+
+// 声明在其他文件中实现的函数
+void modifySharedVariable(int newValue);
+void printSharedVariable();
+
+int main() {
+    printSharedVariable();  // 初始值应为42
+    modifySharedVariable(100);
+    printSharedVariable();  // 修改后的值应为100
+    return 0;
+}
+```
+
+#### 函数声明
+
+在C/C++程序中，函数声明通常默认带有外部链接。因此，直接在头文件中声明函数时并不需要显式使用`extern`。
+
+头文件 (`example.h`)
+```c
+#ifndef EXAMPLE_H
+#define EXAMPLE_H
+
+void exampleFunction(int a); // 默认情况下具有外部链接
+
+#endif // EXAMPLE_H
+```
+
+源文件 (`example.c`)
+```c
+#include "example.h"
+#include <stdio.h>
+
+void exampleFunction(int a) {
+    printf("Example function: %d\n", a);
+}
+```
+
+主程序文件 (`main.c`)
+```c
+#include "example.h"
+
+int main() {
+    exampleFunction(5);
+    return 0;
+}
+```
+
+#### `extern "C"` 使用
+在C++中，编译器会对函数名称进行修饰，以支持函数重载和其他特性。而C语言并不支持名称修饰，这就导致C++编译器生成的库函数无法与C代码直接链接。这时，我们可以使用 `extern "C"` 来避免名称修饰，使得函数可以被C和C++代码共同使用。
+
+示例头文件 (`example.h`)
+```c
+#ifndef EXAMPLE_H
+#define EXAMPLE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void c_function(int a);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // EXAMPLE_H
+```
+
+源文件 (`example.cpp`)
+```cpp
+#include "example.h"
+#include <iostream>
+
+// C风格函数实现，用extern "C"来避免名称修饰
+extern "C" void c_function(int a) {
+    std::cout << "C Function: " << a << std::endl;
+}
+```
+
+主程序文件 (`main.c`)
+```c
+#include "example.h"
+
+int main() {
+    c_function(10);
+    return 0;
+}
+```
+
+## 静态变量
+> [C++ keyword: static - cppreference.com](https://en.cppreference.com/w/cpp/keyword/static) 
+
+### 初始化
+在C++中，静态变量的初始化时机取决于变量的定义位置和类型。主要有两类静态变量：**静态局部变量**和**静态全局变量**（包括静态成员变量）。
+
+#### 静态局部变量
 
 静态局部变量是在函数或方法内部定义的，并且使用 `static` 关键字声明。它们的初始化时机是**第一次使用时**（即懒初始化）。
 
@@ -1268,7 +1685,7 @@ x = 1
 x = 2
 ```
 
-### 静态全局变量和静态成员变量
+#### 静态全局变量和静态成员变量
 静态全局变量和静态成员变量的初始化时机是**程序启动时**（即静态初始化）。
 
 ```cpp
@@ -1298,6 +1715,784 @@ int main() {
     return 0;
 }
 ```
+
+## static members
+> [static members - cppreference.com](https://en.cppreference.com/w/cpp/language/static) 
+
+Inside a class definition, the keyword static declares members that are not bound to class instances.
+Outside a class definition, it has a different meaning: see storage duration.
+
+A declaration for a static member is a member declaration whose declaration specifiers contain the keyword static. The keyword static usually appears before other specifiers (which is why the syntax is often informally described as static data-member or static member-function), but may appear anywhere in the specifier sequence.
+
+static members of a class are not associated with the objects of the class: they are independent variables with static or thread(since C++11) storage duration or regular functions.
+
+The static keyword is only used with the declaration of a static member, inside the class definition, but not with the definition of that static member:
+```cpp
+class X { static int n; }; // declaration (uses 'static')
+int X::n = 1;              // definition (does not use 'static')
+```
+
+### static member function
+- Static member functions are not associated with any object. When called, they have no this pointer.
+- Static member functions cannot be virtual, const, volatile, or ref-qualified.
+- The address of a static member function may be stored in a regular pointer to function, but not in a pointer to member function.
+
+### static data member
+
+Static data members are not associated with any object. They exist even if no objects of the class have been defined. There is only one instance of the static data member in the entire program with static storage duration, unless the keyword thread_local is used, in which case there is one such object per thread with thread storage duration(since C++11).
+
+Static data members cannot be mutable.
+
+Static data members of a class in namespace scope have external linkage if the class itself has external linkage (is not a member of unnamed namespace). Local classes (classes defined inside functions) and unnamed classes, including member classes of unnamed classes, cannot have static data members.
+
+#### inline static data member
+A static data member may be declared inline. An inline static data member can be defined in the class definition and may specify an initializer. It does not need an out-of-class definition:
+```cpp
+struct X
+{
+    inline static int fully_usable = 1; // No out-of-class definition required, ODR-usable
+    inline static const std::string class_name{"X"}; // Likewise
+ 
+    static const int non_addressable = 1; // C.f. non-inline constants, usable
+                                          // for its value, but not ODR-usable
+    // static const std::string class_name{"X"}; // Non-integral declaration of this
+                                                 // form is disallowed entirely
+};
+```
+
+#### constant static data member
+If a static data member of integral or enumeration type is declared const (and not volatile), it can be initialized with an initializer in which every expression is a constant expression, right inside the class definition:
+```cpp
+struct X
+{
+    const static int n = 1;
+    const static int m{2}; // since C++11
+    const static int k;
+};
+const int X::k = 3;
+```
+
+## implicit conversions
+> [Implicit conversions - cppreference.com](https://en.cppreference.com/w/cpp/language/implicit_conversion) 
+
+
+## const_cast
+> [const_cast conversion - cppreference.com](https://en.cppreference.com/w/cpp/language/const_cast) 
+
+`const_cast`是C++中的一种类型转换运算符，用于修改类型的`const`或`volatile`属性。
+
+`const_cast`的主要用途是添加或去除对象的`const`性（或`volatile`性），允许我们在需要时对`const`对象进行修改。需要注意的是，`const_cast`只能改变运算对象的`const`或`volatile`属性，不能改变其类型。
+
+### 使用场景
+
+- **去除`const`性**：当你想要修改一个被声明为`const`的变量时，可以使用`const_cast`去除其`const`性质。
+- **添加`const`性**：在某些情况下，你可能需要将一个非`const`对象传递给只接受`const`参数的函数，此时可以使用`const_cast`添加`const`性。
+
+### 注意事项
+Pointers to functions and pointers to member functions are not subject to const_cast.
+
+const_cast makes it possible to form a reference or pointer to non-const type that is actually referring to a const object or a reference or pointer to non-volatile type that is actually referring to a volatile object. Modifying a const object through a non-const access path and referring to a volatile object through a non-volatile glvalue results in undefined behavior.
+
+- 使用`const_cast`去除`const`性并修改`const`对象是未定义行为，除非该对象本身不是`const`。换句话说，如果对象在创建时被声明为`const`，那么你不应该使用`const_cast`去除其`const`性并修改它。
+
+### 示例
+
+#### 去除`const`性
+
+```cpp
+#include <iostream>
+ 
+struct type
+{
+    int i;
+ 
+    type(): i(3) {}
+ 
+    void f(int v) const
+    {
+        // this->i = v;                 // compile error: this is a pointer to const
+        const_cast<type*>(this)->i = v; // OK as long as the type object isn't const
+    }
+};
+ 
+int main()
+{
+    int i = 3;                 // i is not declared const
+    const int& rci = i;
+    const_cast<int&>(rci) = 4; // OK: modifies i
+    std::cout << "i = " << i << '\n';
+ 
+    type t; // if this was const type t, then t.f(4) would be undefined behavior
+    t.f(4);
+    std::cout << "type::i = " << t.i << '\n';
+ 
+    const int j = 3; // j is declared const
+    [[maybe_unused]]
+    int* pj = const_cast<int*>(&j);
+    // *pj = 4;      // undefined behavior
+ 
+    [[maybe_unused]]
+    void (type::* pmf)(int) const = &type::f; // pointer to member function
+    // const_cast<void(type::*)(int)>(pmf);   // compile error: const_cast does
+                                              // not work on function pointers
+}
+```
+
+#### 添加`const`性
+
+虽然`const_cast`更常用于去除`const`性，但理论上也可以用于添加`const`性。然而，实际上很少有这种需求，因为非`const`到`const`的转换是隐式的。
+
+### 总结
+
+`const_cast`是C++中用于修改对象`const`或`volatile`属性的类型转换运算符。它应谨慎使用，主要用于特殊情况，如与旧C代码的兼容或在确实需要修改`const`对象时。在现代C++编程实践中，应尽量避免使用`const_cast`，并通过设计来保证类型安全和`const`正确性。
+
+1. **违反原有的只读约定**：很多时候，对象被声明为`const`是有其设计上的理由的，表明这个对象或者是它的某些部分不应该被修改，以确保程序的正确性或者对象的状态安全。`const_cast`去除`const`属性并修改内容，意味着你在侵犯这种设计约定，可能会引起程序逻辑错误或不稳定。
+
+2. **触发未定义的行为（Undefined Behavior）**：如果对由`const`对象派生而来的指针或引用去`const`后进行修改，而这个对象本身是在编译时被定义为不可变的，这将会导致未定义的行为。C++标准指出，修改一个本身是常量的值是未定义的行为。这意味着编译器可能会对原始常量进行优化（例如，将它们放入只读存储段），这种修改尝试可能导致程序崩溃。
+
+3. **潜在的内存安全问题**：对某些因内部实现细节而被声明为`const`的对象内容进行修改，可能会破坏对象的内部结构，引起内存泄漏、数据损坏等问题。比如，修改一个被`const`修饰的内部缓存，可能会导致不一致性，从而触发程序运行时错误。
+
+综上所述，虽然`const_cast`可以从语法层面去除对象的常量属性，使得编译时不会报错，但在运行时尝试修改那些应该是只读的数据仍然是非常危险的行为，可能会导致不可预料的后果。因此，只有在绝对确定去除`const`属性不会引发上述问题的情况下，才可以使用`const_cast`进行操作。
+
+## static_cast 和 reinterpret_cast
+> [static_cast conversion - cppreference.com](https://en.cppreference.com/w/cpp/language/static_cast) 
+> [reinterpret_cast conversion - cppreference.com](https://en.cppreference.com/w/cpp/language/reinterpret_cast) 
+
+`static_cast` 是在编译时进行的类型转换，它执行非多态类型的安全转换。这种转换依赖于编译时的类型信息，不涉及运行时的类型检查。`static_cast` 通常用于以下几种情况：
+1. **基本数据类型之间的转换**：如将 `int` 转换为 `float`，或者在不同枚举类型之间转换。
+2. **指针类型之间的转换**：派生类的指针转换为基类的指针，前提是这些类之间存在继承关系。
+3. **算术类型和指针类型之间的转换**：如将 `void*` 转换为其他类型的指针。
+4. **用户定义的转换**：如果类定义了转换运算符，`static_cast` 可以用来调用这些运算符。
+
+`reinterpret_cast` 是一种低级别的转换，它用于进行解释方式的转换，即无视类型的字节内容的重新解释。这种转换不安全，因为它不进行任何类型检查，转换的结果完全取决于程序员的意图。`reinterpret_cast` 常用于以下几种情况：
+Unlike static_cast, but like const_cast, the reinterpret_cast expression does not compile to any CPU instructions (except when converting between integers and pointers, or between pointers on obscure architectures where pointer representation depends on its type). It is primarily a compile-time directive which instructs the compiler to treat expression as if it had the type target-type.
+
+1. **指针和足够大的整数类型之间的转换**：如将指针转换为整数，或者将整数转换为指针。
+2. **指针类型之间的转换**：如将一种类型的指针转换为另一种类型的指针，无论这两种类型是否相关。
+3. **指针和成员指针类型之间的转换**：如将普通指针转换为成员指针，或者反过来。
+4. **函数指针类型之间的转换**：如将一个函数指针转换为另一个不相关的函数指针类型。
+
+## static_cast 和 dynamic_cast 
+> [dynamic_cast conversion - cppreference.com](https://en.cppreference.com/w/cpp/language/dynamic_cast) 
+
+在 C++ 中，`static_cast` 和 `dynamic_cast` 是两种、操作符，它们有以下区别：
+
+1. `static_cast`：
+   - `static_cast` 在编译时进行类型转换，不进行运行时类型检查。
+   - `static_cast` 可以用于基本数据类型之间的转换，以及具有继承关系的指针或引用类型之间的转换。
+   - `static_cast` 可以用于将指针或引用从派生类转换为基类，或者从基类转换为派生类，但是不进行动态类型检查，因此可能导致不安全的转换。
+   - `static_cast` 无法用于执行安全的向下转换（即将基类指针或引用转换为派生类指针或引用），因为它不进行运行时类型检查。
+
+2. `dynamic_cast`：
+   - `dynamic_cast` 在运行时进行类型转换，并且会进行类型检查，以确保转换的安全性。
+   - `dynamic_cast` 主要用于具有继承关系的类之间的指针或引用类型转换。
+   - `dynamic_cast` 可以用于将指针或引用从派生类转换为基类，或者从基类转换为派生类，并且会进行运行时类型检查，如果转换不安全，则返回空指针（对指针进行转换）或抛出 `std::bad_cast` 异常（对引用进行转换）。
+   - `dynamic_cast` 只能在具有虚函数的类层次结构中使用，因为它依赖于运行时类型信息（RTTI）。
+
+总的来说，`static_cast` 是一种较为简单的类型转换操作符，适用于一些基本的类型转换，但不进行运行时类型检查；而 `dynamic_cast` 则是一种更加安全的类型转换操作符，适用于具有继承关系的类之间的转换，并且会进行运行时类型检查以确保转换的安全性。
+
+在 C++ 中，将派生类指针或引用转换为基类指针或引用（即派生类向基类的转换）是安全的。这是因为派生类对象中包含了基类对象的部分，而且派生类对象的地址通常与基类对象的地址相同。
+
+当进行派生类向基类的转换时，编译器会调整指针或引用的偏移量，以指向基类对象的部分。因此，这种转换是安全的，不会导致内存访问越界或其他问题。
+
+这种转换通常用于以下情况：
+- 在继承关系中，需要将派生类对象传递给接受基类对象的函数或方法。
+- 在继承关系中，需要将派生类对象赋值给基类指针或引用。
+
+需要注意的是，尽管派生类向基类的转换是安全的，但在进行基类向派生类的转换时，应该使用 `dynamic_cast` 进行类型检查，以确保转换的安全性。基类向派生类的转换只有在对象实际是派生类对象时才是安全的。
+
+### dynamic_cast 示例
+```cpp
+#include <iostream>
+ 
+struct V
+{
+    virtual void f() {} // must be polymorphic to use runtime-checked dynamic_cast
+};
+ 
+struct A : virtual V {};
+ 
+struct B : virtual V
+{
+    B(V* v, A* a)
+    {
+        // casts during construction (see the call in the constructor of D below)
+        dynamic_cast<B*>(v); // well-defined: v of type V*, V base of B, results in B*
+        dynamic_cast<B*>(a); // undefined behavior: a has type A*, A not a base of B
+    }
+};
+ 
+struct D : A, B
+{
+    D() : B(static_cast<A*>(this), this) {}
+};
+ 
+struct Base
+{
+    virtual ~Base() {}
+};
+ 
+struct Derived : Base
+{
+    virtual void name() {}
+};
+ 
+int main()
+{
+    D d; // the most derived object
+    A& a = d; // upcast, dynamic_cast may be used, but unnecessary
+ 
+    [[maybe_unused]]
+    D& new_d = dynamic_cast<D&>(a); // downcast
+    [[maybe_unused]]
+    B& new_b = dynamic_cast<B&>(a); // sidecast
+ 
+    Base* b1 = new Base;
+    if (Derived* d = dynamic_cast<Derived*>(b1); d != nullptr)
+    {
+        std::cout << "downcast from b1 to d successful\n";
+        d->name(); // safe to call
+    }
+ 
+    Base* b2 = new Derived;
+    if (Derived* d = dynamic_cast<Derived*>(b2); d != nullptr)
+    {
+        std::cout << "downcast from b2 to d successful\n";
+        d->name(); // safe to call
+    }
+ 
+    delete b1;
+    delete b2;
+}
+```
+
+
+## class
+> [Classes - cppreference.com](https://en.cppreference.com/w/cpp/language/classes) 
+
+### class declaration
+> [Class declaration - cppreference.com](https://en.cppreference.com/w/cpp/language/class) 
+
+### polymorphic
+> [Object - cppreference.com](https://en.cppreference.com/w/cpp/language/object#Polymorphic_objects) 
+
+A class with at least one declared or inherited virtual member function is polymorphic. Objects of this type are polymorphic objects and have runtime type information stored as part of the object representation, which may be queried with dynamic_cast and typeid. Virtual member functions participate in dynamic binding.
+
+### constuctor
+> [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor) 
+
+- Constructors have no names and cannot be called directly. 
+
+#### Member initializer list
+> [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor) 
+
+#### 成员变量的初始化
+> [Default-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/default_initialization) 
+
+类的非静态成员变量，在类定义时如果没有给初始化值，并且在构造函数初始化列表中也没有赋值，则会进行 default initialization。
+对于基本数据类型，默认初始化是未定义的值。
+如果是数组，则数组的每个元素都进行默认初始化。
+
+#### 构造顺序
+> [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor#Initialization_order) 
+
+The order of member initializers in the list is irrelevant: the actual order of initialization is as follows:
+1) If the constructor is for the most-derived class, virtual bases are initialized in the order in which they appear in depth-first left-to-right traversal of the base class declarations (left-to-right refers to the appearance in base-specifier lists).
+2) Then, direct bases are initialized in left-to-right order as they appear in this class's base-specifier list.
+3) Then, non-static data member are initialized in order of declaration in the class definition.
+4) Finally, the body of the constructor is executed.
+(Note: if initialization order was controlled by the appearance in the member initializer lists of different constructors, then the destructor wouldn't be able to ensure that the order of destruction is the reverse of the order of construction.)
+
+#### explicit 
+> [explicit specifier - cppreference.com](https://en.cppreference.com/w/cpp/language/explicit) 
+
+在 C++ 中，`explicit` 关键字用于类中的构造函数，它阻止了编译器使用该构造函数进行类型转换。这可以防止编译器在某些情况下进行隐式转换，从而提高代码的清晰度和安全性。
+
+##### 作用
+
+1. **防止隐式转换**：当一个类的构造函数被标记为 `explicit` 时，它不能用于隐式转换。这意味着编译器不会自动将一个对象转换成该类型的实例，除非显式地进行转换。
+
+2. **提高代码清晰度**：通过阻止隐式转换，`explicit` 关键字使得代码的意图更加明确，减少了因隐式转换引起的意外错误。
+
+3. **增强类型安全**：`explicit` 关键字可以防止编译器在不适当的时候进行类型转换，从而增强了程序的类型安全性。
+
+##### 使用场景
+The explicit specifier may only appear within the decl-specifier-seq of the declaration of a constructor or conversion function(since C++11) within its class definition.
+
+1. **构造函数**：当你有一个构造函数时，如果不希望它被用于隐式转换，可以将其标记为 `explicit`。
+
+   ```cpp
+   class MyClass {
+   public:
+       explicit MyClass(int value) : m_value(value) {}
+   private:
+       int m_value;
+   };
+   ```
+
+   在这个例子中，`MyClass` 的构造函数是显式的，因此不能在需要 `MyClass` 类型的地方隐式地使用 `int` 类型的值。
+
+2. **转换运算符**：如果你不希望类提供隐式转换功能，可以将转换运算符声明为 `explicit`。
+
+   ```cpp
+   class MyClass {
+   public:
+       explicit operator bool() const { return m_value != 0; }
+   private:
+       int m_value;
+   };
+   ```
+
+   在这个例子中，`MyClass` 类型的实例不能隐式地转换为 `bool` 类型。
+
+##### 示例
+```cpp
+struct A
+{
+    A(int) {}      // converting constructor
+    A(int, int) {} // converting constructor (C++11)
+    operator bool() const { return true; }
+};
+ 
+struct B
+{
+    explicit B(int) {}
+    explicit B(int, int) {}
+    explicit operator bool() const { return true; }
+};
+ 
+int main()
+{
+    A a1 = 1;      // OK: copy-initialization selects A::A(int)
+    A a2(2);       // OK: direct-initialization selects A::A(int)
+    A a3 {4, 5};   // OK: direct-list-initialization selects A::A(int, int)
+    A a4 = {4, 5}; // OK: copy-list-initialization selects A::A(int, int)
+    A a5 = (A)1;   // OK: explicit cast performs static_cast
+    if (a1) { }    // OK: A::operator bool()
+    bool na1 = a1; // OK: copy-initialization selects A::operator bool()
+    bool na2 = static_cast<bool>(a1); // OK: static_cast performs direct-initialization
+ 
+//  B b1 = 1;      // error: copy-initialization does not consider B::B(int)
+    B b2(2);       // OK: direct-initialization selects B::B(int)
+    B b3 {4, 5};   // OK: direct-list-initialization selects B::B(int, int)
+//  B b4 = {4, 5}; // error: copy-list-initialization does not consider B::B(int, int)
+    B b5 = (B)1;   // OK: explicit cast performs static_cast
+    if (b2) { }    // OK: B::operator bool()
+//  bool nb1 = b2; // error: copy-initialization does not consider B::operator bool()
+    bool nb2 = static_cast<bool>(b2); // OK: static_cast performs direct-initialization
+ 
+    [](...){}(a4, a5, na1, na2, b5, nb2); // suppresses “unused variable” warnings
+}
+```
+
+#### converting constructor
+> [Converting constructor - cppreference.com](https://en.cppreference.com/w/cpp/language/converting_constructor) 
+
+A constructor that is not declared with the specifier explicit and which can be called with a single parameter(until C++11) is called a converting constructor.
+
+Unlike explicit constructors, which are only considered during direct initialization (which includes explicit conversions such as static_cast), converting constructors are also considered during copy initialization, as part of user-defined conversion sequence.
+
+It is said that a converting constructor specifies an implicit conversion from the types of its arguments (if any) to the type of its class. Note that non-explicit user-defined conversion function also specifies an implicit conversion.
+
+Implicitly-declared and user-defined non-explicit copy constructors and move constructors are converting constructors.
+
+```cpp
+struct A
+{
+    A() { }         // converting constructor (since C++11)  
+    A(int) { }      // converting constructor
+    A(int, int) { } // converting constructor (since C++11)
+};
+ 
+struct B
+{
+    explicit B() { }
+    explicit B(int) { }
+    explicit B(int, int) { }
+};
+ 
+int main()
+{
+    A a1 = 1;      // OK: copy-initialization selects A::A(int)
+    A a2(2);       // OK: direct-initialization selects A::A(int)
+    A a3{4, 5};    // OK: direct-list-initialization selects A::A(int, int)
+    A a4 = {4, 5}; // OK: copy-list-initialization selects A::A(int, int)
+    A a5 = (A)1;   // OK: explicit cast performs static_cast, direct-initialization
+ 
+//  B b1 = 1;      // error: copy-initialization does not consider B::B(int)
+    B b2(2);       // OK: direct-initialization selects B::B(int)
+    B b3{4, 5};    // OK: direct-list-initialization selects B::B(int, int)
+//  B b4 = {4, 5}; // error: copy-list-initialization selected an explicit constructor
+                   //        B::B(int, int)
+    B b5 = (B)1;   // OK: explicit cast performs static_cast, direct-initialization
+    B b6;          // OK, default-initialization
+    B b7{};        // OK, direct-list-initialization
+//  B b8 = {};     // error: copy-list-initialization selected an explicit constructor
+                   //        B::B()
+ 
+    [](...){}(a1, a4, a4, a5, b5); // may suppress "unused variable" warnings
+}
+```
+
+#### default constructor
+> [Default constructors - cppreference.com](https://en.cppreference.com/w/cpp/language/default_constructor) 
+
+A default constructor is a constructor which can be called with no arguments.
+
+Default constructors are called during default initializations and value initializations.
+
+If there is no user-declared constructor or constructor template for a class type, the compiler will implicitly declare a default constructor as an inline public member of its class.
+
+默认构造函数是 C++ 类中一种特殊的构造函数，它不接受任何参数。它的主要作用是在创建对象时初始化对象的成员变量。如果一个类中没有显式定义任何构造函数，编译器会隐式地生成一个默认构造函数。这个默认构造函数的行为取决于类中的成员变量。
+
+1. **成员初始化**：
+   - 如果成员变量是基本数据类型（如 `int`、`double` 等），它们不会被自动初始化为零。这意味着它们会被初始化为一个未定义的值。
+   - 如果成员变量是类类型，那么它们的默认构造函数（如果存在）会被调用。
+   - 如果成员变量是指针类型，它们会被初始化为 `nullptr`。
+
+2. **隐式定义**：
+   - 如果类中定义了任何显式的构造函数，编译器不会自动生成默认构造函数，除非显式地使用 `default` 关键字标记。
+
+3. **调用顺序**：
+   - 首先调用基类的默认构造函数（如果有的话）。
+   - 然后按照成员变量在类中声明的顺序调用它们的构造函数。
+
+##### 使用 `default` 关键字
+在 C++11 及以后的版本中，可以使用 `default` 关键字显式要求编译器生成默认构造函数。这在类中已经定义了其他构造函数时特别有用，例如：
+
+```cpp
+class MyClass {
+public:
+    MyClass() = default; // 显式要求编译器生成默认构造函数
+};
+```
+
+##### 默认构造函数与对象数组
+当声明一个对象数组时，如 `MyClass myObjects[10];`，编译器会调用默认构造函数来初始化数组中的每个元素。
+
+
+##### 示例
+```cpp
+struct A
+{
+    int x;
+    A(int x = 1): x(x) {} // user-defined default constructor
+};
+ 
+struct B : A
+{
+    // B::B() is implicitly-defined, calls A::A()
+};
+ 
+struct C
+{
+    A a;
+    // C::C() is implicitly-defined, calls A::A()
+};
+ 
+struct D : A
+{
+    D(int y) : A(y) {}
+    // D::D() is not declared because another constructor exists
+};
+ 
+struct E : A
+{
+    E(int y) : A(y) {}
+    E() = default; // explicitly defaulted, calls A::A()
+};
+ 
+struct F
+{
+    int& ref; // reference member
+    const int c; // const member
+    // F::F() is implicitly defined as deleted
+};
+ 
+// user declared copy constructor (either user-provided, deleted or defaulted)
+// prevents the implicit generation of a default constructor
+ 
+struct G
+{
+    G(const G&) {}
+    // G::G() is implicitly defined as deleted
+};
+ 
+struct H
+{
+    H(const H&) = delete;
+    // H::H() is implicitly defined as deleted
+};
+ 
+struct I
+{
+    I(const I&) = default;
+    // I::I() is implicitly defined as deleted
+};
+ 
+int main()
+{
+    A a;
+    B b;
+    C c;
+//  D d; // compile error
+    E e;
+//  F f; // compile error
+//  G g; // compile error
+//  H h; // compile error
+//  I i; // compile error
+}
+```
+
+#### copy constructor
+> [Copy constructors - cppreference.com](https://en.cppreference.com/w/cpp/language/copy_constructor) 
+> [Copy Constructor in C++ - GeeksforGeeks](https://www.geeksforgeeks.org/copy-constructor-in-cpp/) 
+
+A copy constructor is a constructor which can be called with an argument of the same class type and copies the content of the argument without mutating the argument.
+
+If no user-defined copy constructors are provided for a class type, the compiler will always declare a copy constructor as a non-explicit inline public member of its class. 
+
+A class can have multiple copy constructors, e.g. both T::T(const T&) and T::T(T&).
+
+The copy constructor is called whenever an object is initialized (by direct-initialization or copy-initialization) from another object of the same type (unless overload resolution selects a better match or the call is elided), which includes: 
+- initialization: T a = b; or T a(b);, where b is of type T;
+- function argument passing: f(a);, where a is of type T and f is void f(T t);
+- function return: return a; inside a function such as T f(), where a is of type T, which has no move constructor.
+
+```cpp
+struct X
+{
+    X(X& other); // copy constructor
+//  X(X other);  // Error: incorrect parameter type
+};
+ 
+union Y
+{
+    Y(Y& other, int num = 1); // copy constructor with multiple parameters
+//  Y(Y& other, int num);     // Error: `num` has no default argument
+};
+```
+
+拷贝构造的参数不能是值传递，因为如果拷贝构造函数的参数是通过值传递的，那么每次调用拷贝构造函数时，都需要创建一个参数对象的副本。由于这个副本的创建本身又会调用拷贝构造函数，这样就形成了无限递归。这不仅会导致栈溢出，而且根本就没有意义，因为拷贝构造函数的目的就是避免不必要的对象复制。
+
+如果拷贝构造函数还有其他参数，则其他参数需要有默认值。
+
+#### copy assignment
+> [Copy assignment operator - cppreference.com](https://en.cppreference.com/w/cpp/language/copy_assignment) 
+
+拷贝赋值运算符是 C++ 中的一个成员函数，它用于将一个对象的内容赋值给另一个已经存在的对象。它的一般形式如下：
+```cpp
+ClassType& ClassType::operator=(const ClassType& other) {
+    // ... 赋值操作 ...
+    return *this;
+}
+```
+这里的 `ClassType` 是你的类名，`other` 是一个对另一个同类型对象的引用，该对象的内容将被复制到调用赋值运算符的对象中。
+
+拷贝赋值运算符的主要作用是：
+1. **复制数据**：将一个对象的状态复制到另一个对象中。
+2. **实现对象的赋值**：允许使用赋值运算符 `=` 来将一个对象赋予另一个对象。
+3. **处理自我赋值**：如果赋值运算符没有正确处理自我赋值（self-assignment），即对象赋值给自己，可能会导致内存泄漏或多次释放同一资源等问题。
+自我赋值是一个特殊的情况，当两个指向同一对象的指针或引用相互赋值时，如果不检查自我赋值，可能会导致问题。处理自我赋值的一种常见方法是：
+```cpp
+ClassType& ClassType::operator=(const ClassType& other) {
+    if (this != &other) {
+        // 清理现有资源
+        // 复制新资源
+    }
+    return *this;
+}
+```
+
+实现步骤：
+1. **检查自我赋值**：首先检查是否是自我赋值，如果是，则直接返回。
+2. **释放资源**：如果当前对象拥有动态分配的资源，应该先释放这些资源。
+3. **复制资源**：复制 `other` 对象的资源到当前对象。
+4. **返回当前对象的引用**：返回 `*this`。
+
+```cpp
+class MyClass {
+public:
+    // 拷贝赋值运算符
+    MyClass& operator=(const MyClass& other) {
+        if (this != &other) {
+            delete[] data; // 释放原有资源
+            data = new int[other.size]; // 复制资源
+            size = other.size;
+            std::copy(other.data, other.data + other.size, data);
+        }
+        return *this;
+    }
+
+private:
+    int* data;
+    size_t size;
+};
+```
+
+##### Implicitly-declared copy assignment operator
+If no user-defined copy assignment operators are provided for a class type, the compiler will always declare one as an inline public member of the class. 
+
+Because the copy assignment operator is always declared for any class, the base class assignment operator is always hidden. If a using-declaration is used to bring in the assignment operator from the base class, and its argument type could be the same as the argument type of the implicit assignment operator of the derived class, the using-declaration is also hidden by the implicit declaration.
+
+##### 自定义拷贝赋值
+> [21.12 — Overloading the assignment operator – Learn C++](https://www.learncpp.com/cpp-tutorial/overloading-the-assignment-operator/) 
+
+注释动态资源的分配和释放。
+
+##### 示例
+```cpp
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <string>
+ 
+struct A
+{
+    int n;
+    std::string s1;
+ 
+    A() = default;
+    A(A const&) = default;
+ 
+    // user-defined copy assignment (copy-and-swap idiom)
+    A& operator=(A other)
+    {
+        std::cout << "copy assignment of A\n";
+        std::swap(n, other.n);
+        std::swap(s1, other.s1);
+        return *this;
+    }
+};
+ 
+struct B : A
+{
+    std::string s2;
+    // implicitly-defined copy assignment
+};
+ 
+struct C
+{
+    std::unique_ptr<int[]> data;
+    std::size_t size;
+ 
+    // user-defined copy assignment (non copy-and-swap idiom)
+    // note: copy-and-swap would always reallocate resources
+    C& operator=(const C& other)
+    {
+        if (this != &other) // not a self-assignment
+        {
+            if (size != other.size) // resource cannot be reused
+            {
+                data.reset(new int[other.size]);
+                size = other.size;
+            }
+            std::copy(&other.data[0], &other.data[0] + size, &data[0]);
+        }
+        return *this;
+    }
+};
+ 
+int main()
+{
+    A a1, a2;
+    std::cout << "a1 = a2 calls ";
+    a1 = a2; // user-defined copy assignment
+ 
+    B b1, b2;
+    b2.s1 = "foo";
+    b2.s2 = "bar";
+    std::cout << "b1 = b2 calls ";
+    b1 = b2; // implicitly-defined copy assignment
+ 
+    std::cout << "b1.s1 = " << b1.s1 << "; b1.s2 = " << b1.s2 << '\n';
+}
+```
+
+### desctructors
+> [Destructors - cppreference.com](https://en.cppreference.com/w/cpp/language/destructor) 
+
+A destructor is a special member function that is called when the lifetime of an object ends. The purpose of the destructor is to free the resources that the object may have acquired during its lifetime.
+
+A destructor cannot be a coroutine.
+
+The destructor is implicitly invoked whenever an object's lifetime ends, which includes:
+- program termination, for objects with static storage duration
+- thread exit, for objects with thread-local storage duration (since C++11)
+- end of scope, for objects with automatic storage duration and for temporaries whose life was extended by binding to a reference
+- delete-expression, for objects with dynamic storage duration
+- end of the full expression, for nameless temporaries
+- stack unwinding, for objects with automatic storage duration when an exception escapes their block, uncaught.
+
+The destructor can also be invoked explicitly.
+
+If no user-declared prospective(since C++20) destructor is provided for a class type, the compiler will always declare a destructor as an inline public member of its class.
+
+#### 析构顺序
+和构造顺序相反。
+
+#### 虚析构函数
+Deleting an object through pointer to base invokes undefined behavior unless the destructor in the base class is virtual:
+```cpp
+class Base
+{
+public:
+    virtual ~Base() {}
+};
+ 
+class Derived : public Base {};
+ 
+Base* b = new Derived;
+delete b; // safe
+```
+
+在C++中，如果一个类继承自另一个类（基类），并且基类有一个非虚的析构函数，那么通过基类的指针来删除派生类的对象会导致问题。因为非虚析构函数不会调用派生类的析构函数，导致派生类中的资源可能不会被正确释放，从而引发内存泄漏或其他未定义行为。
+
+为了避免这个问题，基类的析构函数应该被声明为虚函数。这样，当通过基类的指针删除派生类的对象时，首先会调用派生类的析构函数，然后再调用基类的析构函数，确保资源被正确释放。
+
+#### 纯虚析构函数
+A prospective(since C++20) destructor may be declared pure virtual, for example in a base class which needs to be made abstract, but has no other suitable functions that could be declared pure virtual. A pure virtual destructor must have a definition, since all base class destructors are always called when the derived class is destroyed:
+```cpp
+class AbstractBase
+{
+public:
+    virtual ~AbstractBase() = 0;
+};
+AbstractBase::~AbstractBase() {}
+ 
+class Derived : public AbstractBase {};
+ 
+// AbstractBase obj; // compiler error
+Derived obj;         // OK
+```
+
+#### 析构函数的访问级别
+1. **析构函数是 `private`**：
+   如果析构函数被声明为 `private`，那么它只能在类的内部成员函数或友元函数中被调用。这通常用于防止外部代码直接删除对象，确保对象的生命周期由类本身管理。
+
+2. **非静态局部对象**：
+   析构函数是 private，则编译会提示错误。
+
+3. **动态分配的对象**：
+   对于动态分配的对象（使用 `new` 关键字创建的对象），即使析构函数是 `private` 的，也必须手动使用 `delete` 来调用析构函数。如果不这样做，对象的析构函数不会自动被调用，从而导致资源泄漏。
+
+4. **静态局部对象**：
+   析构函数是 private，程序结束后也会调用析构函数。(示例：[C++ Singleton - HackMD](https://hackmd.io/@WesleyCh3n/S1Rlm1kf9))
+
+#### 注意
+Calling a destructor directly for an ordinary object, such as a local variable, invokes undefined behavior when the destructor is called again, at the end of scope.
+
+如果手动调用析构函数后，作用域结束时再次自动调用析构函数，会导致未定义行为。
+
+
+# object file
+> [Getting Title at 18:47](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第七章%20Linking.md) 
+
+# C 和 C++ 混合编程
+
+# 内存管理
+> [虚拟内存](https://xiaolincoding.com/os/3_memory/vmem.html#虚拟内存)
+
 
 # c++ 程序优化
 > [CSAPP-5-程序优化](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第五章%20Optimizing%20Program%20Performance.md)
@@ -1449,7 +2644,6 @@ int main() {
 > [CSAPP-第三章-条件跳转](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第三章%20Machine-Level%20Representation%20of%20Programs.md#366-implementing-conditional-branches-with-conditional-moves)
 
 条件指令会做分支预测，如果预测失败，则降低效率，如果情况允许，条件表达式简单，可能改用条件转移指令更好。
-
 
 ```cpp
 v = test-expr ? then-expr : else-expr;
@@ -1836,7 +3030,7 @@ Static function called
 2. **程序运行期间**：
    - 静态变量在整个程序运行期间一直存在，并且在所有实例之间共享。
 
-3. **程序结束**：
+3. **程序结束**
    - 当程序结束时，操作系统会回收静态变量所占用的内存，但不会自动调用其指向对象的析构函数。
 
 动态分配的内存：
