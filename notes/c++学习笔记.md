@@ -2472,27 +2472,37 @@ Derived obj;         // OK
 
 2. **非静态局部对象**：
    析构函数是 private，则编译会提示错误。
+   在 C++ 中，普通对象（局部对象）的生命周期结束时，它们的析构函数会被自动调用。这一过程是由编译器生成的代码来管理的，编译器会在对象的作用域结束时插入析构函数的调用。如果一个对象的析构函数是 private 的，编译器生成的代码在尝试调用它时会遇到访问权限的问题，因为编译器生成的代码相当于是在类外部调用析构函数，这违反了类的封装性和访问控制规则，会导致编译错误。 (待验证？？)
 
 3. **动态分配的对象**：
    对于动态分配的对象（使用 `new` 关键字创建的对象），即使析构函数是 `private` 的，也必须手动使用 `delete` 来调用析构函数。如果不这样做，对象的析构函数不会自动被调用，从而导致资源泄漏。
 
 4. **静态局部对象**：
    析构函数是 private，程序结束后也会调用析构函数。(示例：[C++ Singleton - HackMD](https://hackmd.io/@WesleyCh3n/S1Rlm1kf9))
+   对于静态对象，它们的生命周期与程序的运行期间是一致的。静态对象的析构函数通常在程序结束时由运行时系统调用。即使析构函数是 private 的，运行时系统也能调用它，因为这种调用不受常规访问控制的限制。这是因为静态对象的析构函数调用是由运行时系统在程序退出时自动进行的，它不受类内部访问控制的限制。(待验证？？)
+   The destructor for a block variable with static storage duration is called at program exit, but only if the initialization took place successfully. ([Storage class specifiers - cppreference.com](https://en.cppreference.com/w/cpp/language/storage_duration))
 
 #### 注意
 Calling a destructor directly for an ordinary object, such as a local variable, invokes undefined behavior when the destructor is called again, at the end of scope.
 
 如果手动调用析构函数后，作用域结束时再次自动调用析构函数，会导致未定义行为。
 
+## 生存期
+> [Lifetime - cppreference.com](https://en.cppreference.com/w/cpp/language/lifetime) 
+> [生存期 - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/language/lifetime.html) 
+> [https://www.syntagm.co.uk/design/articles/exolmcpp.pdf](https://www.syntagm.co.uk/design/articles/exolmcpp.pdf) 
+
+## RAII 资源获取即初始化
+> [RAII - cppreference.com](https://en.cppreference.com/w/cpp/language/raii) 
+
+## 内存管理
+> [虚拟内存](https://xiaolincoding.com/os/3_memory/vmem.html#虚拟内存)
+
 
 # object file
 > [Getting Title at 18:47](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第七章%20Linking.md) 
 
 # C 和 C++ 混合编程
-
-# 内存管理
-> [虚拟内存](https://xiaolincoding.com/os/3_memory/vmem.html#虚拟内存)
-
 
 # c++ 程序优化
 > [CSAPP-5-程序优化](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第五章%20Optimizing%20Program%20Performance.md)
