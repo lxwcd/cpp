@@ -1222,15 +1222,6 @@ The effects of value-initialization are:
 - Otherwise, the object is zero-initialized.
 
 ```cpp
-int i = {};        // 值初始化，i 被初始化为 0
-int j;            // 值初始化，j 被初始化为 0
-int* p = {};      // 值初始化，p 被初始化为 nullptr
-int* q;           // 值初始化，q 被初始化为 nullptr
-int a[3] = {}; // 值初始化 所有元素初始化为 0
-int a[3] = {0}; // 不是值初始化，仅显示将第一个元素初始化为 0
-```
-
-```cpp
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -1334,6 +1325,36 @@ The effects of zero-initialization are:
 
 #### 内置类型的局部变量
 如果没有显式初始化，它们不会被初始化。它们的初始值是未定义的。
+```cpp
+#include <string>
+ 
+struct T1 { int mem; };
+ 
+struct T2
+{
+    int mem;
+    T2() {} // “mem” is not in the initializer list
+};
+ 
+int n; // static non-class, a two-phase initialization is done:
+       // 1) zero-initialization initializes n to zero
+       // 2) default-initialization does nothing, leaving n being zero
+ 
+int main()
+{
+    [[maybe_unused]]
+    int n;            // non-class, the value is indeterminate
+    std::string s;    // class, calls default constructor, the value is ""
+    std::string a[2]; // array, default-initializes the elements, the value is {"", ""}
+//  int& r;           // Error: a reference
+//  const int n;      // Error: a const non-class
+//  const T1 t1;      // Error: const class with implicit default constructor
+    [[maybe_unused]]
+    T1 t1;            // class, calls implicit default constructor
+    const T2 t2;      // const class, calls the user-provided default constructor
+                      // t2.mem is default-initialized
+}
+```
 
 #### 非类的静态和线程局部变量
 > [static local variables](https://en.cppreference.com/w/cpp/language/storage_duration#Static_local_variables)
@@ -1427,6 +1448,33 @@ If the initialization recursively enters the block in which the variable is bein
 
 #### 静态局部变量初始化是线程安全的
 If multiple threads attempt to initialize the same static local variable concurrently, the initialization occurs exactly once (similar behavior can be obtained for arbitrary functions with std::call_once).
+
+### 示例
+#### scaler type 初始化
+```cpp
+int i = {};        // 值初始化，i 被初始化为 0
+int j;            // default-initialization，未定义
+int* p = {};      // 值初始化，p 被初始化为 nullptr
+int* q;           // default-initialization，未定义
+```
+
+#### 数组初始化
+```cpp
+int a[3] = {}; // 值初始化 所有元素初始化为 0
+int a[3] = {0}; // 不是值初始化，仅显示将第一个元素初始化为 0
+```
+第一种，因为 initializer 是空 {}，因此未值初始化，这是一个数组，因此每个数组元素都是 value-initialized。
+数组的每个元素为 int，因此 int 的 value-initialized 初始化为 zero-initialized。
+对于 zero-initialized，元素 int 为 scaler-type，因此元素被初始化为 0。
+
+第二种属于 copy-list-initialization：
+```cpp
+T object = { arg1, arg2, ... };
+```
+数组属于 [aggregate type](https://en.cppreference.com/w/cpp/language/aggregate_initialization)，因此是 [aggregate initialization](https://en.cppreference.com/w/cpp/language/aggregate_initialization)。
+对于给定了初始值的元素按照 copy-initialized 进行初始化，但对于数组中剩下的没有初始值的元素，按照 [default-initialization](https://en.cppreference.com/w/cpp/language/default_initialization) 初始化。
+对于 default-initialization，这里的元素为 int，是 automatic 存储期，因此初始值为未定义的。
+
 
 ## 初始化和内存分配
 在C++编程中，初始化和内存分配是两个相关但又独立的过程。
@@ -1977,6 +2025,61 @@ int main()
 > [Object - cppreference.com](https://en.cppreference.com/w/cpp/language/object#Polymorphic_objects) 
 
 A class with at least one declared or inherited virtual member function is polymorphic. Objects of this type are polymorphic objects and have runtime type information stored as part of the object representation, which may be queried with dynamic_cast and typeid. Virtual member functions participate in dynamic binding.
+
+在C++中，多态的关键在于虚函数的动态绑定。当一个虚函数在父类中被声明，并在子类中被重写时，通过基类指针或引用调用该函数时，会根据对象的实际类型来决定调用哪个版本的函数。这个决策是在运行时进行的，这个过程称为动态多态。
+
+如果子类未实现某个虚函数，那么默认会使用父类的实现。但是，如果父类中的虚函数调用了另一个虚函数，而这个虚函数在子类中有实现，那么即使第一个虚函数是在父类中调用的，只要调用链中的最后一个函数在子类中有重写，那么就会调用子类的实现。
+
+见下面是一个的示例：
+```cpp
+#include <iostream>
+
+// 父类
+class Base {
+public:
+    // 虚函数vfunc1
+    virtual void vfunc1() {
+        std::cout << "Base::vfunc1 called" << std::endl;
+        vfunc2(); // 调用虚函数vfunc2
+    }
+
+    // 虚函数vfunc2
+    virtual void vfunc2() {
+        std::cout << "Base::vfunc2 called" << std::endl;
+    }
+};
+
+// 子类
+class Derived : public Base {
+public:
+    // 重写虚函数vfunc2
+    void vfunc2() override {
+        std::cout << "Derived::vfunc2 called" << std::endl;
+    }
+};
+
+int main() {
+    Base* b = new Derived(); // 基类指针指向派生类对象
+    b->vfunc1(); // 调用vfunc1，会调用派生类的vfunc2
+    delete b;
+    return 0;
+}
+```
+
+在这个示例中：
+
+1. `Base`类有两个虚函数`vfunc1`和`vfunc2`。
+2. `Derived`类继承自`Base`类，并重写了`vfunc2`函数。
+3. 在`main`函数中，我们创建了一个`Derived`类型的对象，但是通过`Base`类型的指针`b`来访问它。
+4. 当我们调用`b->vfunc1()`时，虽然`vfunc1`是在`Base`类中定义的，但是它会调用`vfunc2`。
+5. 由于`vfunc2`在`Derived`类中有重写，即使`vfunc1`的调用是在`Base`类中发起的，`vfunc2`的调用也会使用`Derived`类的实现。
+
+输出：
+```cpp
+Base::vfunc1 called
+Derived::vfunc2 called
+```
+
 
 ### constuctor
 > [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor) 
