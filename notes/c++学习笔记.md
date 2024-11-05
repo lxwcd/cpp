@@ -2071,7 +2071,7 @@ int main() {
 1. `Base`类有两个虚函数`vfunc1`和`vfunc2`。
 2. `Derived`类继承自`Base`类，并重写了`vfunc2`函数。
 3. 在`main`函数中，我们创建了一个`Derived`类型的对象，但是通过`Base`类型的指针`b`来访问它。
-4. 当我们调用`b->vfunc1()`时，虽然`vfunc1`是在`Base`类中定义的，但是它会调用`vfunc2`。
+4. 当调用`b->vfunc1()`时，虽然`vfunc1`是在`Base`类中定义的，但是它会调用`vfunc2`。
 5. 由于`vfunc2`在`Derived`类中有重写，即使`vfunc1`的调用是在`Base`类中发起的，`vfunc2`的调用也会使用`Derived`类的实现。
 
 输出：
@@ -2094,7 +2094,7 @@ Derived::vfunc2 called
 
 类的非静态成员变量，在类定义时如果没有给初始化值，并且在构造函数初始化列表中也没有赋值，则会进行 default initialization。
 对于基本数据类型，默认初始化是未定义的值。
-如果是数组，则数组的每个元素都进行默认初始化。
+如果是数组，则数组的每个元素都进行默认初始化，如果数组的元素为基本类型，如 int 等，默认初始化则其值是未定义的。
 
 #### 构造顺序
 > [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor#Initialization_order) 
@@ -2390,7 +2390,7 @@ ClassType& ClassType::operator=(const ClassType& other) {
     return *this;
 }
 ```
-这里的 `ClassType` 是你的类名，`other` 是一个对另一个同类型对象的引用，该对象的内容将被复制到调用赋值运算符的对象中。
+这里的 `ClassType` 是类名，`other` 是一个对另一个同类型对象的引用，该对象的内容将被复制到调用赋值运算符的对象中。
 
 拷贝赋值运算符的主要作用是：
 1. **复制数据**：将一个对象的状态复制到另一个对象中。
@@ -2511,6 +2511,11 @@ int main()
     std::cout << "b1.s1 = " << b1.s1 << "; b1.s2 = " << b1.s2 << '\n';
 }
 ```
+
+#### move constructor
+> [Move constructors - cppreference.com](https://en.cppreference.com/w/cpp/language/move_constructor) 
+
+
 
 ### desctructors
 > [Destructors - cppreference.com](https://en.cppreference.com/w/cpp/language/destructor) 
