@@ -389,12 +389,27 @@ element_type& write() {
 2. 如果不是唯一持有者：
    - 通过 `read()` 获取当前值，返回常量左值引用
    - 使用模板构造函数创建新副本，此副本的计数 count 为 1
-   - 赋值给当前对象
+   - copy_on_write 返回一个临时对象，是右值，因此调用移动赋值给当前对象
 3. 返回内部数据的可修改引用
 
 ### 注意
-这个写操作内置
+这个写操作不是原子的，无内置同步机制保证 value 的并发访问，如果多线程并非访问可能有问题，需要外部加锁。
 
+```cpp
+class copy_on_write {
+    // ...
+    mutable std::mutex m_mutex;
+    
+    element_type& write() {
+        std::lock_guard lock(m_mutex);  // 加锁
+        
+        if (!unique()) {
+            *this = copy_on_write(read());
+        }
+        return m_data->value;
+    }
+};
+```
 
 ## 读操作 `read()`
 ```cpp
@@ -428,9 +443,7 @@ bool unique() const noexcept {
 | 写操作   | **不安全**（需外部同步） | 检查+复制非原子操作    |
 | 赋值操作 | 依赖拷贝/移动构造安全性  | 间接依赖底层操作安全性 |
 
-## 使用示例
-
-### 基本使用
+## 基本使用
 ```cpp
 copy_on_write<std::vector<int>> shared_data;
 
@@ -450,7 +463,7 @@ reader.join();
 writer.join();
 ```
 
-### 高效赋值
+## 高效赋值
 ```cpp
 copy_on_write<std::string> str1("Hello");
 auto str2 = str1; // 共享数据，无拷贝
@@ -461,102 +474,3 @@ str2.write() += " World";
 std::cout << str1.read() << "\n"; // 输出 "Hello"
 std::cout << str2.read() << "\n"; // 输出 "Hello World"
 ```
-
-## 设计模式分析
-
-### 1. 享元模式 (Flyweight)
-- 共享相同数据，减少内存占用
-- 只在必要时创建副本
-
-### 2. 写时复制 (Copy-on-Write)
-- 延迟复制策略，优化性能
-- 读操作零开销，写操作按需复制
-
-### 3. 引用计数
-- 自动内存管理
-- 原子操作保证线程安全
-
-## 改进建议
-
-### 1. 写操作线程安全增强
-```cpp
-element_type& write() {
-    payload* old_data = m_data;
-    
-    // 检查并准备新数据
-    if (!unique()) {
-        auto* new_data = new payload(read());
-        if (m_data->count.fetch_sub(1) != 1) {
-            m_data = new_data;
-        } else {
-            delete new_data;
-            delete old_data;
-        }
-    }
-    
-    return m_data->value;
-}
-```
-
-### 2. 添加线程安全包装
-```cpp
-template <typename T>
-class synchronized_cow {
-public:
-    // 加锁的写操作
-    template <typename Func>
-    void write(Func&& f) {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        f(cow.write());
-    }
-    
-    // 加锁的读操作
-    template <typename Func>
-    void read(Func&& f) const {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        f(cow.read());
-    }
-    
-private:
-    copy_on_write<T> cow;
-    mutable std::mutex m_mutex;
-};
-```
-
-### 3. 支持自定义分配器
-```cpp
-template <typename T, typename Allocator = std::allocator<payload>>
-class copy_on_write {
-    // 使用分配器创建和删除 payload
-};
-```
-
-## 性能考量
-
-1. **读操作**：与直接访问数据几乎相同（仅多一次指针解引用）
-2. **写操作**：
-   - 唯一持有时：与直接修改相同
-   - 共享时：一次完整拷贝 + 原子操作开销
-3. **内存占用**：额外增加一个指针和原子计数（通常 8-16 字节）
-
-## 适用场景
-
-1. **配置数据**：多线程读取配置，偶尔更新
-2. **UI 状态**：界面元素共享状态数据
-3. **缓存系统**：只读缓存数据共享
-4. **函数式数据结构**：持久化数据结构实现
-5. **资源管理**：大型资源（如图像、模型）共享
-
-## 总结
-
-此 `copy_on_write` 类实现了经典的写时复制语义：
-
-1. **高效读操作**：共享数据，零拷贝访问
-2. **惰性写操作**：仅在必要时复制数据
-3. **自动内存管理**：引用计数自动释放资源
-4. **线程安全基础**：原子引用计数保证基本安全
-5. **现代C++特性**：
-   - 完美转发构造函数
-   - 移动语义支持
-   - `noexcept` 异常规范
-   - SFINAE 约束构造函数
