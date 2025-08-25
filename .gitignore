@@ -34,3 +34,9 @@
 # swap file
 *.swp
 *.*~
+
+# vs proj
+*.vcxproj*
+.vs/
+Debug
+
