@@ -1661,6 +1661,77 @@ extern int missingVar; // 声明
 // 链接时会报"未定义的引用"错误
 ```
 
+### 在定义中的使用
+
+`extern` 关键字在C++中有两种不同的用法：
+
+1. **纯声明**（在头文件中）：`extern const int MAX_SIZE;`
+2. **定义性声明**（在源文件中）：`extern const int MAX_SIZE = 100;`
+
+在C++中，const 全局变量默认具有**内部链接性**（相当于隐式 `static`）。这意味着：
+
+```cpp
+// 默认情况下，const 变量只在当前文件内可见
+const int MAX_SIZE = 100; // 内部链接，相当于 static const int MAX_SIZE = 100;
+```
+
+当想让 const 变量具有**外部链接性**（可以被其他文件访问）时，需要在定义时使用 `extern`：
+
+```cpp
+// 使用 extern 使 const 变量具有外部链接性
+extern const int MAX_SIZE = 100; // 外部链接，其他文件可以访问
+```
+
+没有 `extern` 的情况（默认内部链接）
+
+```cpp
+// file1.cpp
+const int MAX_SIZE = 100; // 内部链接，只在 file1.cpp 中可见
+
+// file2.cpp
+extern const int MAX_SIZE; // 错误：找不到 MAX_SIZE 的定义
+```
+
+使用 `extern` 的情况（外部链接）
+
+```cpp
+// file1.cpp
+extern const int MAX_SIZE = 100; // 外部链接，定义
+
+// file2.cpp
+extern const int MAX_SIZE; // 正确：声明，使用 file1.cpp 中的定义
+
+void useMaxSize() {
+    int array[MAX_SIZE]; // 可以使用 MAX_SIZE
+}
+```
+
+#### 场景1：在头文件中声明，在源文件中定义
+
+这是最常见和推荐的方式：
+
+```cpp
+// config.h
+extern const int MAX_SIZE; // 声明
+
+// config.cpp
+extern const int MAX_SIZE = 100; // 定义
+```
+
+#### 场景2：直接在定义处使用 extern
+
+当确定这个常量只需要在一个文件中定义，并且不需要在头文件中声明时：
+
+```cpp
+// constants.cpp
+extern const int MAX_SIZE = 100; // 定义，具有外部链接
+extern const double PI = 3.14159;
+
+// other.cpp
+extern const int MAX_SIZE; // 声明，使用 constants.cpp 中的定义
+extern const double PI;
+```
+
 ## extern "C"
 `extern` 关键字是C和C++中的一个存储类说明符，用于声明变量和函数的外部链接。这意味着它们的定义可能位于其他文件中。这在编写跨文件程序时尤其关键，通过`extern`可以共享数据和函数，而无需重复定义它们。
 
