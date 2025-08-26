@@ -1497,6 +1497,18 @@ T object = { arg1, arg2, ... };
 
 在C++编程中，`extern`关键字非常重要，它用于声明一个变量或函数是在别处定义的，这意味着使用`extern`可以在多个文件之间共享全局变量和函数。
 
+### `extern` 关键字的主要用途
+
+1. **共享全局变量**:
+    - 允许某一文件中的全局变量可以被其他文件访问。
+    - 避免重复定义同一变量，从而节省内存并确保数据一致。
+
+2. **函数声明**:
+    - 默认情况下，函数声明带有外部链接。因此，`extern`通常省略，因为声明函数时其默认链接类型就是外部链接。
+
+3. **与 `extern "C"` 配合使用**:
+    - 在C++中，使函数或变量按照C语言的方式进行链接，以避免编译器对名称进行修饰（name mangling）。
+
 ### `extern`的关键点
 
 1. **声明而非定义**: 当你使用`extern`时，它告诉编译器相应的变量或函数在其他地方定义，而不是在当前位置创建一个新的实例。
@@ -1732,81 +1744,7 @@ extern const int MAX_SIZE; // 声明，使用 constants.cpp 中的定义
 extern const double PI;
 ```
 
-## extern "C"
-`extern` 关键字是C和C++中的一个存储类说明符，用于声明变量和函数的外部链接。这意味着它们的定义可能位于其他文件中。这在编写跨文件程序时尤其关键，通过`extern`可以共享数据和函数，而无需重复定义它们。
-
-### `extern` 关键字的主要用途
-
-1. **共享全局变量**:
-    - 允许某一文件中的全局变量可以被其他文件访问。
-    - 避免重复定义同一变量，从而节省内存并确保数据一致。
-
-2. **函数声明**:
-    - 默认情况下，函数声明带有外部链接。因此，`extern`通常省略，因为声明函数时其默认链接类型就是外部链接。
-
-3. **与 `extern "C"` 配合使用**:
-    - 在C++中，使函数或变量按照C语言的方式进行链接，以避免编译器对名称进行修饰（name mangling）。
-
-### 使用`extern`的示例
-
-#### 共享全局变量
-
-假设我们有两个文件：`file1.c` 和 `file2.c`，它们需要共享一个全局变量。
-
-文件结构：
-```
-project/
-|-- file1.c
-|-- file2.c
-|-- main.c
-```
-
-**在 `file1.c` 中定义全局变量:**
-
-```c
-// file1.c
-#include <stdio.h>
-
-int sharedVariable = 42;
-
-void modifySharedVariable(int newValue) {
-    sharedVariable = newValue;
-    printf("Shared Variable modified to %d in file1.c\n", sharedVariable);
-}
-```
-
-**在 `file2.c` 中声明并使用该全局变量:**
-
-```c
-// file2.c
-#include <stdio.h>
-
-extern int sharedVariable;
-
-void printSharedVariable() {
-    printf("Shared Variable in file2.c is %d\n", sharedVariable);
-}
-```
-
-**主程序文件 `main.c`：**
-
-```c
-// main.c
-#include <stdio.h>
-
-// 声明在其他文件中实现的函数
-void modifySharedVariable(int newValue);
-void printSharedVariable();
-
-int main() {
-    printSharedVariable();  // 初始值应为42
-    modifySharedVariable(100);
-    printSharedVariable();  // 修改后的值应为100
-    return 0;
-}
-```
-
-#### 函数声明
+### 函数声明
 
 在C/C++程序中，函数声明通常默认带有外部链接。因此，直接在头文件中声明函数时并不需要显式使用`extern`。
 
@@ -1840,8 +1778,10 @@ int main() {
 }
 ```
 
-#### `extern "C"` 使用
-在C++中，编译器会对函数名称进行修饰，以支持函数重载和其他特性。而C语言并不支持名称修饰，这就导致C++编译器生成的库函数无法与C代码直接链接。这时，我们可以使用 `extern "C"` 来避免名称修饰，使得函数可以被C和C++代码共同使用。
+## extern "C"
+`extern` 关键字是C和C++中的一个存储类说明符，用于声明变量和函数的外部链接。这意味着它们的定义可能位于其他文件中。这在编写跨文件程序时尤其关键，通过`extern`可以共享数据和函数，而无需重复定义它们。
+
+在C++中，编译器会对函数名称进行修饰，以支持函数重载和其他特性。而C语言并不支持名称修饰，这就导致C++编译器生成的库函数无法与C代码直接链接。这时，可以使用 `extern "C"` 来避免名称修饰，使得函数可以被C和C++代码共同使用。
 
 示例头文件 (`example.h`)
 ```c
@@ -1885,124 +1825,234 @@ int main() {
 ## 静态变量
 > [C++ keyword: static - cppreference.com](https://en.cppreference.com/w/cpp/keyword/static) 
 
+## static 局部变量
+
+在函数内部声明的静态局部变量具有以下特性：
+- 生命周期贯穿整个程序运行期间
+- 只在第一次进入函数时初始化
+- 作用域仍限于函数内部
+
+```cpp
+#include <iostream>
+using namespace std;
+
+void counter() {
+    static int count = 0; // 静态局部变量
+    count++;
+    cout << "Count: " << count << endl;
+}
+
+int main() {
+    counter(); // 输出 Count: 1
+    counter(); // 输出 Count: 2
+    counter(); // 输出 Count: 3
+    return 0;
+}
+```
+
+## static 全局变量
+
+在全局作用域中使用 `static` 声明的变量：
+- 具有文件作用域（只在当前文件内可见）
+- 避免命名冲突
+- 生命周期贯穿整个程序
+
+```cpp
+// file1.cpp
+static int fileLocalVar = 42; // 只在当前文件可见
+
+// file2.cpp
+extern int fileLocalVar; // 链接错误，无法访问另一个文件的静态全局变量
+```
+
+1. **声明时初始化的 static 全局变量**：使用指定的值进行初始化
+2. **声明时未初始化的 static 全局变量**：
+   - 基本类型：进行零初始化（0, 0.0, false, nullptr等）
+   - 类类型：调用默认构造函数
+3. **初始化时机**：
+   - 在程序启动时（main函数执行前）初始化
+   - 在程序结束时（main函数执行后）销毁
+4. **初始化顺序**：不同编译单元中的static全局变量初始化顺序未定义
+5. **解决方案**：对于需要跨文件访问的静态数据，使用函数包装器或单例模式
+
 ### 初始化
-在C++中，静态变量的初始化时机取决于变量的定义位置和类型。主要有两类静态变量：**静态局部变量**和**静态全局变量**（包括静态成员变量）。
 
-#### 静态局部变量
+static 全局变量的初始化分为两种类型：
 
-静态局部变量是在函数或方法内部定义的，并且使用 `static` 关键字声明。它们的初始化时机是**第一次使用时**（即懒初始化）。
+1. **静态初始化**（零初始化）：在编译时确定初始值，如果没用初始化，则初始化为 0
+2. **动态初始化**：需要在运行时执行代码来确定初始值
 
 ```cpp
 #include <iostream>
+#include <ctime>
+using namespace std;
 
-void foo() {
-    static int x = 0;  // 静态局部变量
-    x++;
-    std::cout << "x = " << x << std::endl;
-}
+// 静态初始化（编译时）
+static int staticInitialized = 100;
+static const char* staticString = "Compile-time";
+
+// 动态初始化（运行时）
+static time_t currentTime = time(nullptr); // 需要在运行时调用函数
+static int dynamicValue = []() {
+    cout << "Initializing dynamicValue..." << endl;
+    return 42;
+}(); // 使用lambda表达式初始化
 
 int main() {
-    foo();  // 第一次调用，x 被初始化为 0，然后递增为 1
-    foo();  // 第二次调用，x 已经初始化，递增为 2
+    cout << "staticInitialized: " << staticInitialized << endl;
+    cout << "staticString: " << staticString << endl;
+    cout << "currentTime: " << currentTime << endl;
+    cout << "dynamicValue: " << dynamicValue << endl;
+    
     return 0;
 }
 ```
 
-```cpp
-x = 1
-x = 2
-```
+### constexpr 与 static 结合
 
-#### 静态全局变量和静态成员变量
-静态全局变量和静态成员变量的初始化时机是**程序启动时**（即静态初始化）。
+C++11 引入了 constexpr，可以与 static 结合使用：
 
 ```cpp
 #include <iostream>
+using namespace std;
 
-static int x = 0;  // 静态全局变量
+// constexpr 静态变量必须在编译时初始化
+static constexpr int compileTimeValue = 100;
+static constexpr double compileTimePI = 3.14159;
+
+// 错误：constexpr 变量必须初始化
+// static constexpr int uninitializedConstexpr;
 
 int main() {
-    std::cout << "x = " << x << std::endl;  // x 在程序启动时初始化为 0
+    // 可以在编译时使用这些值
+    int array[compileTimeValue]; // 合法，因为compileTimeValue是编译时常量
+    
+    cout << "compileTimeValue: " << compileTimeValue << endl;
+    cout << "compileTimePI: " << compileTimePI << endl;
+    
     return 0;
 }
 ```
 
+## static 成员变量
+
+类的静态成员变量：
+- 属于类本身，而不是类的实例
+- 所有实例共享同一份拷贝
+- 需要在类外进行定义和初始化
+
 ```cpp
 #include <iostream>
+using namespace std;
 
 class MyClass {
 public:
-    static int x;  // 静态成员变量声明
+    static int staticVar; // 声明静态成员变量
+    int normalVar;
+    
+    MyClass(int val) : normalVar(val) {}
 };
 
-// 静态成员变量定义和初始化
-int MyClass::x = 0;
+// 定义和初始化静态成员变量
+int MyClass::staticVar = 0;
 
 int main() {
-    std::cout << "MyClass::x = " << MyClass::x << std::endl;  // x 在程序启动时初始化为 0
+    MyClass obj1(10), obj2(20);
+    
+    cout << "obj1.normalVar: " << obj1.normalVar << endl; // 10
+    cout << "obj2.normalVar: " << obj2.normalVar << endl; // 20
+    
+    // 静态变量通过类名访问
+    cout << "MyClass::staticVar: " << MyClass::staticVar << endl; // 0
+    
+    // 修改静态变量
+    MyClass::staticVar = 100;
+    
+    // 所有实例看到相同的值
+    cout << "obj1.staticVar: " << obj1.staticVar << endl; // 100
+    cout << "obj2.staticVar: " << obj2.staticVar << endl; // 100
+    
     return 0;
 }
 ```
 
-## static members
-> [static members - cppreference.com](https://en.cppreference.com/w/cpp/language/static) 
+## static 成员函数
 
-Inside a class definition, the keyword static declares members that are not bound to class instances.
-Outside a class definition, it has a different meaning: see storage duration.
+静态成员函数：
+- 属于类本身，而不是类的实例
+- 不能访问类的非静态成员
+- 没有 `this` 指针
+- 可以直接通过类名调用
 
-A declaration for a static member is a member declaration whose declaration specifiers contain the keyword static. The keyword static usually appears before other specifiers (which is why the syntax is often informally described as static data-member or static member-function), but may appear anywhere in the specifier sequence.
-
-static members of a class are not associated with the objects of the class: they are independent variables with static or thread(since C++11) storage duration or regular functions.
-
-The static keyword is only used with the declaration of a static member, inside the class definition, but not with the definition of that static member:
 ```cpp
-class X { static int n; }; // declaration (uses 'static')
-int X::n = 1;              // definition (does not use 'static')
-```
+#include <iostream>
+using namespace std;
 
-### static member function
-- Static member functions are not associated with any object. When called, they have no this pointer.
-- Static member functions cannot be virtual, const, volatile, or ref-qualified.
-- The address of a static member function may be stored in a regular pointer to function, but not in a pointer to member function.
-
-### static data member
-
-Static data members are not associated with any object. They exist even if no objects of the class have been defined. There is only one instance of the static data member in the entire program with static storage duration, unless the keyword thread_local is used, in which case there is one such object per thread with thread storage duration(since C++11).
-
-Static data members cannot be mutable.
-
-Static data members of a class in namespace scope have external linkage if the class itself has external linkage (is not a member of unnamed namespace). Local classes (classes defined inside functions) and unnamed classes, including member classes of unnamed classes, cannot have static data members.
-
-#### inline static data member
-A static data member may be declared inline. An inline static data member can be defined in the class definition and may specify an initializer. It does not need an out-of-class definition:
-```cpp
-struct X
-{
-    inline static int fully_usable = 1; // No out-of-class definition required, ODR-usable
-    inline static const std::string class_name{"X"}; // Likewise
- 
-    static const int non_addressable = 1; // C.f. non-inline constants, usable
-                                          // for its value, but not ODR-usable
-    // static const std::string class_name{"X"}; // Non-integral declaration of this
-                                                 // form is disallowed entirely
+class MathUtils {
+public:
+    static int add(int a, int b) {
+        return a + b;
+    }
+    
+    static double PI() {
+        return 3.14159;
+    }
+    
+    // 错误示例：静态函数不能访问非静态成员
+    // static void printNormalVar() {
+    //     cout << normalVar; // 编译错误
+    // }
+    
+private:
+    int normalVar;
 };
+
+int main() {
+    // 直接通过类名调用静态函数
+    cout << "5 + 3 = " << MathUtils::add(5, 3) << endl;
+    cout << "PI: " << MathUtils::PI() << endl;
+    
+    return 0;
+}
 ```
 
-#### constant static data member
-If a static data member of integral or enumeration type is declared const (and not volatile), it can be initialized with an initializer in which every expression is a constant expression, right inside the class definition:
+## static 在普通函数前
+
+在普通函数前使用 `static`：
+- 使函数具有文件作用域（只在当前文件内可见）
+- 避免命名冲突
+
 ```cpp
-struct X
-{
-    const static int n = 1;
-    const static int m{2}; // since C++11
-    const static int k;
-};
-const int X::k = 3;
+// file1.cpp
+#include <iostream>
+using namespace std;
+
+static void fileLocalFunction() {
+    cout << "This function is only visible in this file" << endl;
+}
+
+void publicFunction() {
+    fileLocalFunction(); // 可以调用
+}
+
+// file2.cpp
+extern void fileLocalFunction(); // 链接错误，无法访问另一个文件的静态函数
 ```
+
+## 总结
+
+| static 用法 | 作用域   | 生命周期 | 特点                             |
+| ----------- | -------- | -------- | -------------------------------- |
+| 局部变量    | 函数内部 | 整个程序 | 只初始化一次，保持值不变         |
+| 全局变量    | 文件内部 | 整个程序 | 避免命名冲突                     |
+| 成员变量    | 类范围   | 整个程序 | 所有实例共享，属于类本身         |
+| 成员函数    | 类范围   | -        | 不能访问非静态成员，没有this指针 |
+| 普通函数    | 文件内部 | -        | 避免命名冲突                     |
+
+`static` 关键字的主要作用是控制变量和函数的可见性和生命周期，合理使用可以提高代码的模块化和封装性。
 
 ## implicit conversions
 > [Implicit conversions - cppreference.com](https://en.cppreference.com/w/cpp/language/implicit_conversion) 
-
 
 ## const_cast
 > [const_cast conversion - cppreference.com](https://en.cppreference.com/w/cpp/language/const_cast) 
