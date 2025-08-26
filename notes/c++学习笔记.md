@@ -2059,19 +2059,19 @@ extern void fileLocalFunction(); // 链接错误，无法访问另一个文件�
 
 `const_cast`是C++中的一种类型转换运算符，用于修改类型的`const`或`volatile`属性。
 
-`const_cast`的主要用途是添加或去除对象的`const`性（或`volatile`性），允许我们在需要时对`const`对象进行修改。需要注意的是，`const_cast`只能改变运算对象的`const`或`volatile`属性，不能改变其类型。
+`const_cast`的主要用途是添加或去除对象的`const`性（或`volatile`性），允许在需要时对`const`对象进行修改。需要注意的是，`const_cast`只能改变运算对象的`const`或`volatile`属性，不能改变其类型。
 
 ### 使用场景
 
-- **去除`const`性**：当你想要修改一个被声明为`const`的变量时，可以使用`const_cast`去除其`const`性质。
-- **添加`const`性**：在某些情况下，你可能需要将一个非`const`对象传递给只接受`const`参数的函数，此时可以使用`const_cast`添加`const`性。
+- **去除`const`性**：当想要修改一个被声明为`const`的变量时，可以使用`const_cast`去除其`const`性质。
+- **添加`const`性**：在某些情况下，可能需要将一个非`const`对象传递给只接受`const`参数的函数，此时可以使用`const_cast`添加`const`性。
 
 ### 注意事项
 Pointers to functions and pointers to member functions are not subject to const_cast.
 
 const_cast makes it possible to form a reference or pointer to non-const type that is actually referring to a const object or a reference or pointer to non-volatile type that is actually referring to a volatile object. Modifying a const object through a non-const access path and referring to a volatile object through a non-volatile glvalue results in undefined behavior.
 
-- 使用`const_cast`去除`const`性并修改`const`对象是未定义行为，除非该对象本身不是`const`。换句话说，如果对象在创建时被声明为`const`，那么你不应该使用`const_cast`去除其`const`性并修改它。
+- 使用`const_cast`去除`const`性并修改`const`对象是未定义行为，除非该对象本身不是`const`。换句话说，如果对象在创建时被声明为`const`，那么不应该使用`const_cast`去除其`const`性并修改它。
 
 ### 示例
 
@@ -2182,68 +2182,39 @@ Unlike static_cast, but like const_cast, the reinterpret_cast expression does no
 ### dynamic_cast 示例
 ```cpp
 #include <iostream>
- 
-struct V
-{
-    virtual void f() {} // must be polymorphic to use runtime-checked dynamic_cast
+#include <typeinfo>
+using namespace std;
+
+class Base {
+public:
+    virtual ~Base() {} // 必须有虚函数才能使 dynamic_cast 工作
 };
- 
-struct A : virtual V {};
- 
-struct B : virtual V
-{
-    B(V* v, A* a)
-    {
-        // casts during construction (see the call in the constructor of D below)
-        dynamic_cast<B*>(v); // well-defined: v of type V*, V base of B, results in B*
-        dynamic_cast<B*>(a); // undefined behavior: a has type A*, A not a base of B
+
+class Derived : public Base {
+public:
+    void specificFunction() {
+        cout << "Derived class specific function" << endl;
     }
 };
- 
-struct D : A, B
-{
-    D() : B(static_cast<A*>(this), this) {}
-};
- 
-struct Base
-{
-    virtual ~Base() {}
-};
- 
-struct Derived : Base
-{
-    virtual void name() {}
-};
- 
-int main()
-{
-    D d; // the most derived object
-    A& a = d; // upcast, dynamic_cast may be used, but unnecessary
- 
-    [[maybe_unused]]
-    D& new_d = dynamic_cast<D&>(a); // downcast
-    [[maybe_unused]]
-    B& new_b = dynamic_cast<B&>(a); // sidecast
- 
-    Base* b1 = new Base;
-    if (Derived* d = dynamic_cast<Derived*>(b1); d != nullptr)
-    {
-        std::cout << "downcast from b1 to d successful\n";
-        d->name(); // safe to call
+
+int main() {
+    // 创建一个 Derived 对象，但使用 Base 指针引用它
+    Base* basePtr = new Derived();
+    
+    // 使用 dynamic_cast 进行向下转换
+    Derived* derivedPtr = dynamic_cast<Derived*>(basePtr);
+    
+    if (derivedPtr) {
+        cout << "Downcast successful" << endl;
+        derivedPtr->specificFunction(); // 可以调用派生类特有方法
+    } else {
+        cout << "Downcast failed" << endl;
     }
- 
-    Base* b2 = new Derived;
-    if (Derived* d = dynamic_cast<Derived*>(b2); d != nullptr)
-    {
-        std::cout << "downcast from b2 to d successful\n";
-        d->name(); // safe to call
-    }
- 
-    delete b1;
-    delete b2;
+    
+    delete basePtr;
+    return 0;
 }
 ```
-
 
 ## class
 > [Classes - cppreference.com](https://en.cppreference.com/w/cpp/language/classes) 
@@ -2310,7 +2281,6 @@ Base::vfunc1 called
 Derived::vfunc2 called
 ```
 
-
 ### constuctor
 > [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor) 
 
@@ -2336,12 +2306,126 @@ The order of member initializers in the list is irrelevant: the actual order of 
 4) Finally, the body of the constructor is executed.
 (Note: if initialization order was controlled by the appearance in the member initializer lists of different constructors, then the destructor wouldn't be able to ensure that the order of destruction is the reverse of the order of construction.)
 
+C++ 支持多重继承，即一个类可以同时继承多个基类。构造函数的调用顺序遵循以下规则：
+1. 按照基类声明顺序调用构造函数
+2. 按照成员变量声明顺序初始化成员
+3. 最后执行派生类自身的构造函数
+
+```cpp
+#include <iostream>
+#include <string>
+using namespace std;
+
+// 基类1
+class Base1 {
+public:
+    Base1() {
+        cout << "Base1 构造函数被调用" << endl;
+    }
+    
+    ~Base1() {
+        cout << "Base1 析构函数被调用" << endl;
+    }
+};
+
+// 基类2
+class Base2 {
+public:
+    Base2() {
+        cout << "Base2 构造函数被调用" << endl;
+    }
+    
+    ~Base2() {
+        cout << "Base2 析构函数被调用" << endl;
+    }
+};
+
+// 基类3
+class Base3 {
+public:
+    Base3() {
+        cout << "Base3 构造函数被调用" << endl;
+    }
+    
+    ~Base3() {
+        cout << "Base3 析构函数被调用" << endl;
+    }
+};
+
+// 成员类
+class Member {
+public:
+    Member(const string& name) : name(name) {
+        cout << "Member " << name << " 构造函数被调用" << endl;
+    }
+    
+    ~Member() {
+        cout << "Member " << name << " 析构函数被调用" << endl;
+    }
+    
+private:
+    string name;
+};
+
+// 派生类，继承多个基类
+class Derived : public Base2, public Base1, public Base3 {
+public:
+    Derived() : m3("3"), m1("1"), m2("2") {
+        cout << "Derived 构造函数被调用" << endl;
+    }
+    
+    ~Derived() {
+        cout << "Derived 析构函数被调用" << endl;
+    }
+    
+private:
+    // 成员变量
+    Member m1;
+    Member m2;
+    Member m3;
+};
+
+int main() {
+    cout << "创建 Derived 对象..." << endl;
+    Derived derived;
+    
+    cout << "\nDerived 对象即将离开作用域..." << endl;
+    return 0;
+}
+```
+
+1. **多重继承**：`Derived` 类同时继承 `Base2`、`Base1` 和 `Base3`
+2. **构造函数顺序**：
+   - 基类构造函数按照继承列表中声明的顺序调用（Base2 → Base1 → Base3）
+   - 成员变量按照在类中声明的顺序初始化（m1 → m2 → m3）
+   - 最后调用派生类自身的构造函数
+3. **析构函数顺序**：与构造函数顺序相反
+
+运行此程序将输出：
+```
+创建 Derived 对象...
+Base2 构造函数被调用
+Base1 构造函数被调用
+Base3 构造函数被调用
+Member 1 构造函数被调用
+Member 2 构造函数被调用
+Member 3 构造函数被调用
+Derived 构造函数被调用
+
+Derived 对象即将离开作用域...
+Derived 析构函数被调用
+Member 3 析构函数被调用
+Member 2 析构函数被调用
+Member 1 析构函数被调用
+Base3 析构函数被调用
+Base1 析构函数被调用
+Base2 析构函数被调用
+```
+
 #### explicit 
 > [explicit specifier - cppreference.com](https://en.cppreference.com/w/cpp/language/explicit) 
 
 在 C++ 中，`explicit` 关键字用于类中的构造函数，它阻止了编译器使用该构造函数进行类型转换。这可以防止编译器在某些情况下进行隐式转换，从而提高代码的清晰度和安全性。
-
-##### 作用
 
 1. **防止隐式转换**：当一个类的构造函数被标记为 `explicit` 时，它不能用于隐式转换。这意味着编译器不会自动将一个对象转换成该类型的实例，除非显式地进行转换。
 
@@ -2349,10 +2433,9 @@ The order of member initializers in the list is irrelevant: the actual order of 
 
 3. **增强类型安全**：`explicit` 关键字可以防止编译器在不适当的时候进行类型转换，从而增强了程序的类型安全性。
 
-##### 使用场景
 The explicit specifier may only appear within the decl-specifier-seq of the declaration of a constructor or conversion function(since C++11) within its class definition.
 
-1. **构造函数**：当你有一个构造函数时，如果不希望它被用于隐式转换，可以将其标记为 `explicit`。
+1. **构造函数**：当有一个构造函数时，如果不希望它被用于隐式转换，可以将其标记为 `explicit`。
 
    ```cpp
    class MyClass {
@@ -2365,7 +2448,7 @@ The explicit specifier may only appear within the decl-specifier-seq of the decl
 
    在这个例子中，`MyClass` 的构造函数是显式的，因此不能在需要 `MyClass` 类型的地方隐式地使用 `int` 类型的值。
 
-2. **转换运算符**：如果你不希望类提供隐式转换功能，可以将转换运算符声明为 `explicit`。
+2. **转换运算符**：如果不希望类提供隐式转换功能，可以将转换运算符声明为 `explicit`。
 
    ```cpp
    class MyClass {
