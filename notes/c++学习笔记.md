@@ -938,7 +938,7 @@ make 是一个自动化构建工具，用于管理和控制软件构建过程。
 
 在C++中，纯声明（不包含定义）是一种常用的实践，特别适用于向编译器介绍某个标识符（如变量、函数、类等）而不立即提供其完整的定义。这种方式特别有用于实现头文件和模块化编程，让编译器知道某个标识符的存在及其类型，但实现（定义）可能会在其他地方给出。
 
-1. **函数声明（函数原型）**:
+### 函数声明（函数原型）
 函数的声明（Function Declaration）告诉编译器函数的名字、返回类型以及参数（如果有的话），但不包括具体的函数实现。函数的定义（Function Definition）则包括了函数的具体实现。
 
 在C++中，函数声明非常简单，仅仅需要指定函数的返回类型、函数名以及参数列表（如果有的话），通常以分号结尾。例如：
@@ -969,7 +969,7 @@ void doNothing() {} // 空函数体的函数定义
 void doNothing(); // 函数声明
 ```
 
-2. **外部变量声明**:
+### 外部变量声明
 在C++编程中，`extern`关键字非常重要，它用于声明一个变量或函数是在别处定义的，这意味着使用`extern`可以在多个文件之间共享全局变量和函数。
 
 考虑一个项目，其中包含两个文件：`globals.cpp`和`main.cpp`。
@@ -1014,7 +1014,7 @@ Global variable value: 42
 
 使用`extern`关键字确保了在`main.cpp`中能正确访问在`globals.cpp`中定义的`globalVariable`变量，这展示了如何在C++中跨文件共享全局变量。
 
-3. **类和结构体的前向声明**:
+### 类和结构体的前向声明
 当只需要知道一个类的存在而不需要知道类的细节时，你可以进行类的前向声明。这特别有用于处理循环依赖问题。
 ```cpp
 class MyClass; // 类的前向声明
@@ -1027,7 +1027,7 @@ struct MyStruct; // 结构体的前向声明
 typedef unsigned long ulong; // 声明了一个unsigned long的别名为ulong
 ```
 
-5. **声明模板**:
+### 模板声明
 模板可以被声明但不立即定义，直到实例化时。
 ```cpp
 template <typename T>
@@ -1037,7 +1037,7 @@ template <typename T>
 void myTemplateFunction(T); // 模板函数的声明
 ```
 
-6. **使用extern "C"声明C语言链接**:
+### 使用extern "C"声明C语言链接
 在C++中，当想要声明一个函数遵循C语言的链接规则时，可以使用`extern "C"`。
 
 ```cpp
@@ -1831,6 +1831,7 @@ int main() {
 - 生命周期贯穿整个程序运行期间
 - 只在第一次进入函数时初始化
 - 作用域仍限于函数内部
+- 静态局部变量的声明周期由编译器管理，编译器会自动调用析构函数，即使析构函数是 private 也能调用
 
 ```cpp
 #include <iostream>
@@ -1940,6 +1941,7 @@ int main() {
 - 属于类本身，而不是类的实例
 - 所有实例共享同一份拷贝
 - 需要在类外进行定义和初始化
+- 静态成员变量的生命周期由程序管理。 程序结束时，编译器会自动调用静态成员变量的析构函数。 如果析构函数是私有的，编译器无法调用它，从而导致错误。
 
 ```cpp
 #include <iostream>
@@ -2216,709 +2218,51 @@ int main() {
 }
 ```
 
-## class
-> [Classes - cppreference.com](https://en.cppreference.com/w/cpp/language/classes) 
+## dynamic_cast 返回值
 
-### class declaration
-> [Class declaration - cppreference.com](https://en.cppreference.com/w/cpp/language/class) 
-
-### polymorphic
-> [Object - cppreference.com](https://en.cppreference.com/w/cpp/language/object#Polymorphic_objects) 
-
-A class with at least one declared or inherited virtual member function is polymorphic. Objects of this type are polymorphic objects and have runtime type information stored as part of the object representation, which may be queried with dynamic_cast and typeid. Virtual member functions participate in dynamic binding.
-
-在C++中，多态的关键在于虚函数的动态绑定。当一个虚函数在父类中被声明，并在子类中被重写时，通过基类指针或引用调用该函数时，会根据对象的实际类型来决定调用哪个版本的函数。这个决策是在运行时进行的，这个过程称为动态多态。
-
-如果子类未实现某个虚函数，那么默认会使用父类的实现。但是，如果父类中的虚函数调用了另一个虚函数，而这个虚函数在子类中有实现，那么即使第一个虚函数是在父类中调用的，只要调用链中的最后一个函数在子类中有重写，那么就会调用子类的实现。
-
-见下面是一个的示例：
-```cpp
-#include <iostream>
-
-// 父类
-class Base {
-public:
-    // 虚函数vfunc1
-    virtual void vfunc1() {
-        std::cout << "Base::vfunc1 called" << std::endl;
-        vfunc2(); // 调用虚函数vfunc2
-    }
-
-    // 虚函数vfunc2
-    virtual void vfunc2() {
-        std::cout << "Base::vfunc2 called" << std::endl;
-    }
-};
-
-// 子类
-class Derived : public Base {
-public:
-    // 重写虚函数vfunc2
-    void vfunc2() override {
-        std::cout << "Derived::vfunc2 called" << std::endl;
-    }
-};
-
-int main() {
-    Base* b = new Derived(); // 基类指针指向派生类对象
-    b->vfunc1(); // 调用vfunc1，会调用派生类的vfunc2
-    delete b;
-    return 0;
-}
-```
-
-在这个示例中：
-
-1. `Base`类有两个虚函数`vfunc1`和`vfunc2`。
-2. `Derived`类继承自`Base`类，并重写了`vfunc2`函数。
-3. 在`main`函数中，我们创建了一个`Derived`类型的对象，但是通过`Base`类型的指针`b`来访问它。
-4. 当调用`b->vfunc1()`时，虽然`vfunc1`是在`Base`类中定义的，但是它会调用`vfunc2`。
-5. 由于`vfunc2`在`Derived`类中有重写，即使`vfunc1`的调用是在`Base`类中发起的，`vfunc2`的调用也会使用`Derived`类的实现。
-
-输出：
-```cpp
-Base::vfunc1 called
-Derived::vfunc2 called
-```
-
-### constuctor
-> [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor) 
-
-- Constructors have no names and cannot be called directly. 
-
-#### Member initializer list
-> [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor) 
-
-#### 成员变量的初始化
-> [Default-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/default_initialization) 
-
-类的非静态成员变量，在类定义时如果没有给初始化值，并且在构造函数初始化列表中也没有赋值，则会进行 default initialization。
-对于基本数据类型，默认初始化是未定义的值。
-如果是数组，则数组的每个元素都进行默认初始化，如果数组的元素为基本类型，如 int 等，默认初始化则其值是未定义的。
-
-#### 构造顺序
-> [Constructors and member initializer lists - cppreference.com](https://en.cppreference.com/w/cpp/language/constructor#Initialization_order) 
-
-The order of member initializers in the list is irrelevant: the actual order of initialization is as follows:
-1) If the constructor is for the most-derived class, virtual bases are initialized in the order in which they appear in depth-first left-to-right traversal of the base class declarations (left-to-right refers to the appearance in base-specifier lists).
-2) Then, direct bases are initialized in left-to-right order as they appear in this class's base-specifier list.
-3) Then, non-static data member are initialized in order of declaration in the class definition.
-4) Finally, the body of the constructor is executed.
-(Note: if initialization order was controlled by the appearance in the member initializer lists of different constructors, then the destructor wouldn't be able to ensure that the order of destruction is the reverse of the order of construction.)
-
-C++ 支持多重继承，即一个类可以同时继承多个基类。构造函数的调用顺序遵循以下规则：
-1. 按照基类声明顺序调用构造函数
-2. 按照成员变量声明顺序初始化成员
-3. 最后执行派生类自身的构造函数
+### 1. 指针类型的转换
 
 ```cpp
-#include <iostream>
-#include <string>
-using namespace std;
-
-// 基类1
-class Base1 {
-public:
-    Base1() {
-        cout << "Base1 构造函数被调用" << endl;
-    }
-    
-    ~Base1() {
-        cout << "Base1 析构函数被调用" << endl;
-    }
-};
-
-// 基类2
-class Base2 {
-public:
-    Base2() {
-        cout << "Base2 构造函数被调用" << endl;
-    }
-    
-    ~Base2() {
-        cout << "Base2 析构函数被调用" << endl;
-    }
-};
-
-// 基类3
-class Base3 {
-public:
-    Base3() {
-        cout << "Base3 构造函数被调用" << endl;
-    }
-    
-    ~Base3() {
-        cout << "Base3 析构函数被调用" << endl;
-    }
-};
-
-// 成员类
-class Member {
-public:
-    Member(const string& name) : name(name) {
-        cout << "Member " << name << " 构造函数被调用" << endl;
-    }
-    
-    ~Member() {
-        cout << "Member " << name << " 析构函数被调用" << endl;
-    }
-    
-private:
-    string name;
-};
-
-// 派生类，继承多个基类
-class Derived : public Base2, public Base1, public Base3 {
-public:
-    Derived() : m3("3"), m1("1"), m2("2") {
-        cout << "Derived 构造函数被调用" << endl;
-    }
-    
-    ~Derived() {
-        cout << "Derived 析构函数被调用" << endl;
-    }
-    
-private:
-    // 成员变量
-    Member m1;
-    Member m2;
-    Member m3;
-};
-
-int main() {
-    cout << "创建 Derived 对象..." << endl;
-    Derived derived;
-    
-    cout << "\nDerived 对象即将离开作用域..." << endl;
-    return 0;
-}
-```
-
-1. **多重继承**：`Derived` 类同时继承 `Base2`、`Base1` 和 `Base3`
-2. **构造函数顺序**：
-   - 基类构造函数按照继承列表中声明的顺序调用（Base2 → Base1 → Base3）
-   - 成员变量按照在类中声明的顺序初始化（m1 → m2 → m3）
-   - 最后调用派生类自身的构造函数
-3. **析构函数顺序**：与构造函数顺序相反
-
-运行此程序将输出：
-```
-创建 Derived 对象...
-Base2 构造函数被调用
-Base1 构造函数被调用
-Base3 构造函数被调用
-Member 1 构造函数被调用
-Member 2 构造函数被调用
-Member 3 构造函数被调用
-Derived 构造函数被调用
-
-Derived 对象即将离开作用域...
-Derived 析构函数被调用
-Member 3 析构函数被调用
-Member 2 析构函数被调用
-Member 1 析构函数被调用
-Base3 析构函数被调用
-Base1 析构函数被调用
-Base2 析构函数被调用
-```
-
-#### explicit 
-> [explicit specifier - cppreference.com](https://en.cppreference.com/w/cpp/language/explicit) 
-
-在 C++ 中，`explicit` 关键字用于类中的构造函数，它阻止了编译器使用该构造函数进行类型转换。这可以防止编译器在某些情况下进行隐式转换，从而提高代码的清晰度和安全性。
-
-1. **防止隐式转换**：当一个类的构造函数被标记为 `explicit` 时，它不能用于隐式转换。这意味着编译器不会自动将一个对象转换成该类型的实例，除非显式地进行转换。
-
-2. **提高代码清晰度**：通过阻止隐式转换，`explicit` 关键字使得代码的意图更加明确，减少了因隐式转换引起的意外错误。
-
-3. **增强类型安全**：`explicit` 关键字可以防止编译器在不适当的时候进行类型转换，从而增强了程序的类型安全性。
-
-The explicit specifier may only appear within the decl-specifier-seq of the declaration of a constructor or conversion function(since C++11) within its class definition.
-
-1. **构造函数**：当有一个构造函数时，如果不希望它被用于隐式转换，可以将其标记为 `explicit`。
-
-   ```cpp
-   class MyClass {
-   public:
-       explicit MyClass(int value) : m_value(value) {}
-   private:
-       int m_value;
-   };
-   ```
-
-   在这个例子中，`MyClass` 的构造函数是显式的，因此不能在需要 `MyClass` 类型的地方隐式地使用 `int` 类型的值。
-
-2. **转换运算符**：如果不希望类提供隐式转换功能，可以将转换运算符声明为 `explicit`。
-
-   ```cpp
-   class MyClass {
-   public:
-       explicit operator bool() const { return m_value != 0; }
-   private:
-       int m_value;
-   };
-   ```
-
-   在这个例子中，`MyClass` 类型的实例不能隐式地转换为 `bool` 类型。
-
-##### 示例
-```cpp
-struct A
-{
-    A(int) {}      // converting constructor
-    A(int, int) {} // converting constructor (C++11)
-    operator bool() const { return true; }
-};
- 
-struct B
-{
-    explicit B(int) {}
-    explicit B(int, int) {}
-    explicit operator bool() const { return true; }
-};
- 
-int main()
-{
-    A a1 = 1;      // OK: copy-initialization selects A::A(int)
-    A a2(2);       // OK: direct-initialization selects A::A(int)
-    A a3 {4, 5};   // OK: direct-list-initialization selects A::A(int, int)
-    A a4 = {4, 5}; // OK: copy-list-initialization selects A::A(int, int)
-    A a5 = (A)1;   // OK: explicit cast performs static_cast
-    if (a1) { }    // OK: A::operator bool()
-    bool na1 = a1; // OK: copy-initialization selects A::operator bool()
-    bool na2 = static_cast<bool>(a1); // OK: static_cast performs direct-initialization
- 
-//  B b1 = 1;      // error: copy-initialization does not consider B::B(int)
-    B b2(2);       // OK: direct-initialization selects B::B(int)
-    B b3 {4, 5};   // OK: direct-list-initialization selects B::B(int, int)
-//  B b4 = {4, 5}; // error: copy-list-initialization does not consider B::B(int, int)
-    B b5 = (B)1;   // OK: explicit cast performs static_cast
-    if (b2) { }    // OK: B::operator bool()
-//  bool nb1 = b2; // error: copy-initialization does not consider B::operator bool()
-    bool nb2 = static_cast<bool>(b2); // OK: static_cast performs direct-initialization
- 
-    [](...){}(a4, a5, na1, na2, b5, nb2); // suppresses “unused variable” warnings
-}
-```
-
-#### converting constructor
-> [Converting constructor - cppreference.com](https://en.cppreference.com/w/cpp/language/converting_constructor) 
-
-A constructor that is not declared with the specifier explicit and which can be called with a single parameter(until C++11) is called a converting constructor.
-
-Unlike explicit constructors, which are only considered during direct initialization (which includes explicit conversions such as static_cast), converting constructors are also considered during copy initialization, as part of user-defined conversion sequence.
-
-It is said that a converting constructor specifies an implicit conversion from the types of its arguments (if any) to the type of its class. Note that non-explicit user-defined conversion function also specifies an implicit conversion.
-
-Implicitly-declared and user-defined non-explicit copy constructors and move constructors are converting constructors.
-
-```cpp
-struct A
-{
-    A() { }         // converting constructor (since C++11)  
-    A(int) { }      // converting constructor
-    A(int, int) { } // converting constructor (since C++11)
-};
- 
-struct B
-{
-    explicit B() { }
-    explicit B(int) { }
-    explicit B(int, int) { }
-};
- 
-int main()
-{
-    A a1 = 1;      // OK: copy-initialization selects A::A(int)
-    A a2(2);       // OK: direct-initialization selects A::A(int)
-    A a3{4, 5};    // OK: direct-list-initialization selects A::A(int, int)
-    A a4 = {4, 5}; // OK: copy-list-initialization selects A::A(int, int)
-    A a5 = (A)1;   // OK: explicit cast performs static_cast, direct-initialization
- 
-//  B b1 = 1;      // error: copy-initialization does not consider B::B(int)
-    B b2(2);       // OK: direct-initialization selects B::B(int)
-    B b3{4, 5};    // OK: direct-list-initialization selects B::B(int, int)
-//  B b4 = {4, 5}; // error: copy-list-initialization selected an explicit constructor
-                   //        B::B(int, int)
-    B b5 = (B)1;   // OK: explicit cast performs static_cast, direct-initialization
-    B b6;          // OK, default-initialization
-    B b7{};        // OK, direct-list-initialization
-//  B b8 = {};     // error: copy-list-initialization selected an explicit constructor
-                   //        B::B()
- 
-    [](...){}(a1, a4, a4, a5, b5); // may suppress "unused variable" warnings
-}
-```
-
-#### default constructor
-> [Default constructors - cppreference.com](https://en.cppreference.com/w/cpp/language/default_constructor) 
-
-A default constructor is a constructor which can be called with no arguments.
-
-Default constructors are called during default initializations and value initializations.
-
-If there is no user-declared constructor or constructor template for a class type, the compiler will implicitly declare a default constructor as an inline public member of its class.
-
-默认构造函数是 C++ 类中一种特殊的构造函数，它不接受任何参数。它的主要作用是在创建对象时初始化对象的成员变量。如果一个类中没有显式定义任何构造函数，编译器会隐式地生成一个默认构造函数。这个默认构造函数的行为取决于类中的成员变量。
-
-1. **成员初始化**：
-   - 如果成员变量是基本数据类型（如 `int`、`double` 等），它们不会被自动初始化为零。这意味着它们会被初始化为一个未定义的值。
-   - 如果成员变量是类类型，那么它们的默认构造函数（如果存在）会被调用。
-   - 如果成员变量是指针类型，它们会被初始化为 `nullptr`。
-
-2. **隐式定义**：
-   - 如果类中定义了任何显式的构造函数，编译器不会自动生成默认构造函数，除非显式地使用 `default` 关键字标记。
-
-3. **调用顺序**：
-   - 首先调用基类的默认构造函数（如果有的话）。
-   - 然后按照成员变量在类中声明的顺序调用它们的构造函数。
-
-##### 使用 `default` 关键字
-在 C++11 及以后的版本中，可以使用 `default` 关键字显式要求编译器生成默认构造函数。这在类中已经定义了其他构造函数时特别有用，例如：
-
-```cpp
-class MyClass {
-public:
-    MyClass() = default; // 显式要求编译器生成默认构造函数
-};
-```
-
-##### 默认构造函数与对象数组
-当声明一个对象数组时，如 `MyClass myObjects[10];`，编译器会调用默认构造函数来初始化数组中的每个元素。
-
-
-##### 示例
-```cpp
-struct A
-{
-    int x;
-    A(int x = 1): x(x) {} // user-defined default constructor
-};
- 
-struct B : A
-{
-    // B::B() is implicitly-defined, calls A::A()
-};
- 
-struct C
-{
-    A a;
-    // C::C() is implicitly-defined, calls A::A()
-};
- 
-struct D : A
-{
-    D(int y) : A(y) {}
-    // D::D() is not declared because another constructor exists
-};
- 
-struct E : A
-{
-    E(int y) : A(y) {}
-    E() = default; // explicitly defaulted, calls A::A()
-};
- 
-struct F
-{
-    int& ref; // reference member
-    const int c; // const member
-    // F::F() is implicitly defined as deleted
-};
- 
-// user declared copy constructor (either user-provided, deleted or defaulted)
-// prevents the implicit generation of a default constructor
- 
-struct G
-{
-    G(const G&) {}
-    // G::G() is implicitly defined as deleted
-};
- 
-struct H
-{
-    H(const H&) = delete;
-    // H::H() is implicitly defined as deleted
-};
- 
-struct I
-{
-    I(const I&) = default;
-    // I::I() is implicitly defined as deleted
-};
- 
-int main()
-{
-    A a;
-    B b;
-    C c;
-//  D d; // compile error
-    E e;
-//  F f; // compile error
-//  G g; // compile error
-//  H h; // compile error
-//  I i; // compile error
-}
-```
-
-#### copy constructor
-> [Copy constructors - cppreference.com](https://en.cppreference.com/w/cpp/language/copy_constructor) 
-> [Copy Constructor in C++ - GeeksforGeeks](https://www.geeksforgeeks.org/copy-constructor-in-cpp/) 
-
-A copy constructor is a constructor which can be called with an argument of the same class type and copies the content of the argument without mutating the argument.
-
-If no user-defined copy constructors are provided for a class type, the compiler will always declare a copy constructor as a non-explicit inline public member of its class. 
-
-A class can have multiple copy constructors, e.g. both T::T(const T&) and T::T(T&).
-
-The copy constructor is called whenever an object is initialized (by direct-initialization or copy-initialization) from another object of the same type (unless overload resolution selects a better match or the call is elided), which includes: 
-- initialization: T a = b; or T a(b);, where b is of type T;
-- function argument passing: f(a);, where a is of type T and f is void f(T t);
-- function return: return a; inside a function such as T f(), where a is of type T, which has no move constructor.
-
-```cpp
-struct X
-{
-    X(X& other); // copy constructor
-//  X(X other);  // Error: incorrect parameter type
-};
- 
-union Y
-{
-    Y(Y& other, int num = 1); // copy constructor with multiple parameters
-//  Y(Y& other, int num);     // Error: `num` has no default argument
-};
-```
-
-拷贝构造的参数不能是值传递，因为如果拷贝构造函数的参数是通过值传递的，那么每次调用拷贝构造函数时，都需要创建一个参数对象的副本。由于这个副本的创建本身又会调用拷贝构造函数，这样就形成了无限递归。这不仅会导致栈溢出，而且根本就没有意义，因为拷贝构造函数的目的就是避免不必要的对象复制。
-
-如果拷贝构造函数还有其他参数，则其他参数需要有默认值。
-
-#### copy assignment
-> [Copy assignment operator - cppreference.com](https://en.cppreference.com/w/cpp/language/copy_assignment) 
-
-拷贝赋值运算符是 C++ 中的一个成员函数，它用于将一个对象的内容赋值给另一个已经存在的对象。它的一般形式如下：
-```cpp
-ClassType& ClassType::operator=(const ClassType& other) {
-    // ... 赋值操作 ...
-    return *this;
-}
-```
-这里的 `ClassType` 是类名，`other` 是一个对另一个同类型对象的引用，该对象的内容将被复制到调用赋值运算符的对象中。
-
-拷贝赋值运算符的主要作用是：
-1. **复制数据**：将一个对象的状态复制到另一个对象中。
-2. **实现对象的赋值**：允许使用赋值运算符 `=` 来将一个对象赋予另一个对象。
-3. **处理自我赋值**：如果赋值运算符没有正确处理自我赋值（self-assignment），即对象赋值给自己，可能会导致内存泄漏或多次释放同一资源等问题。
-自我赋值是一个特殊的情况，当两个指向同一对象的指针或引用相互赋值时，如果不检查自我赋值，可能会导致问题。处理自我赋值的一种常见方法是：
-```cpp
-ClassType& ClassType::operator=(const ClassType& other) {
-    if (this != &other) {
-        // 清理现有资源
-        // 复制新资源
-    }
-    return *this;
-}
-```
-
-实现步骤：
-1. **检查自我赋值**：首先检查是否是自我赋值，如果是，则直接返回。
-2. **释放资源**：如果当前对象拥有动态分配的资源，应该先释放这些资源。
-3. **复制资源**：复制 `other` 对象的资源到当前对象。
-4. **返回当前对象的引用**：返回 `*this`。
-
-```cpp
-class MyClass {
-public:
-    // 拷贝赋值运算符
-    MyClass& operator=(const MyClass& other) {
-        if (this != &other) {
-            delete[] data; // 释放原有资源
-            data = new int[other.size]; // 复制资源
-            size = other.size;
-            std::copy(other.data, other.data + other.size, data);
-        }
-        return *this;
-    }
-
-private:
-    int* data;
-    size_t size;
-};
-```
-
-##### Implicitly-declared copy assignment operator
-If no user-defined copy assignment operators are provided for a class type, the compiler will always declare one as an inline public member of the class. 
-
-Because the copy assignment operator is always declared for any class, the base class assignment operator is always hidden. If a using-declaration is used to bring in the assignment operator from the base class, and its argument type could be the same as the argument type of the implicit assignment operator of the derived class, the using-declaration is also hidden by the implicit declaration.
-
-##### 自定义拷贝赋值
-> [21.12 — Overloading the assignment operator – Learn C++](https://www.learncpp.com/cpp-tutorial/overloading-the-assignment-operator/) 
-
-注释动态资源的分配和释放。
-
-##### 示例
-```cpp
-#include <algorithm>
-#include <iostream>
-#include <memory>
-#include <string>
- 
-struct A
-{
-    int n;
-    std::string s1;
- 
-    A() = default;
-    A(A const&) = default;
- 
-    // user-defined copy assignment (copy-and-swap idiom)
-    A& operator=(A other)
-    {
-        std::cout << "copy assignment of A\n";
-        std::swap(n, other.n);
-        std::swap(s1, other.s1);
-        return *this;
-    }
-};
- 
-struct B : A
-{
-    std::string s2;
-    // implicitly-defined copy assignment
-};
- 
-struct C
-{
-    std::unique_ptr<int[]> data;
-    std::size_t size;
- 
-    // user-defined copy assignment (non copy-and-swap idiom)
-    // note: copy-and-swap would always reallocate resources
-    C& operator=(const C& other)
-    {
-        if (this != &other) // not a self-assignment
-        {
-            if (size != other.size) // resource cannot be reused
-            {
-                data.reset(new int[other.size]);
-                size = other.size;
-            }
-            std::copy(&other.data[0], &other.data[0] + size, &data[0]);
-        }
-        return *this;
-    }
-};
- 
-int main()
-{
-    A a1, a2;
-    std::cout << "a1 = a2 calls ";
-    a1 = a2; // user-defined copy assignment
- 
-    B b1, b2;
-    b2.s1 = "foo";
-    b2.s2 = "bar";
-    std::cout << "b1 = b2 calls ";
-    b1 = b2; // implicitly-defined copy assignment
- 
-    std::cout << "b1.s1 = " << b1.s1 << "; b1.s2 = " << b1.s2 << '\n';
-}
-```
-
-#### move constructor
-> [Move constructors - cppreference.com](https://en.cppreference.com/w/cpp/language/move_constructor) 
-
-
-
-### desctructors
-> [Destructors - cppreference.com](https://en.cppreference.com/w/cpp/language/destructor) 
-
-A destructor is a special member function that is called when the lifetime of an object ends. The purpose of the destructor is to free the resources that the object may have acquired during its lifetime.
-
-A destructor cannot be a coroutine.
-
-The destructor is implicitly invoked whenever an object's lifetime ends, which includes:
-- program termination, for objects with static storage duration
-- thread exit, for objects with thread-local storage duration (since C++11)
-- end of scope, for objects with automatic storage duration and for temporaries whose life was extended by binding to a reference
-- delete-expression, for objects with dynamic storage duration
-- end of the full expression, for nameless temporaries
-- stack unwinding, for objects with automatic storage duration when an exception escapes their block, uncaught.
-
-The destructor can also be invoked explicitly.
-
-If no user-declared prospective(since C++20) destructor is provided for a class type, the compiler will always declare a destructor as an inline public member of its class.
-
-#### 析构顺序
-和构造顺序相反。
-
-#### 虚析构函数
-Deleting an object through pointer to base invokes undefined behavior unless the destructor in the base class is virtual:
-```cpp
-class Base
-{
-public:
-    virtual ~Base() {}
-};
- 
+class Base { virtual void foo() {} }; // 必须有多态性（至少一个虚函数）
 class Derived : public Base {};
- 
-Base* b = new Derived;
-delete b; // safe
+
+Base* basePtr = new Derived();
+
+// 指针转换：成功返回有效指针，失败返回 nullptr
+Derived* derivedPtr = dynamic_cast<Derived*>(basePtr);
+if (derivedPtr != nullptr) {
+    // 转换成功，可以安全使用 derivedPtr
+    derivedPtr->someMethod();
+} else {
+    // 转换失败，derivedPtr 为 nullptr
+    std::cout << "转换失败" << std::endl;
+}
 ```
 
-在C++中，如果一个类继承自另一个类（基类），并且基类有一个非虚的析构函数，那么通过基类的指针来删除派生类的对象会导致问题。因为非虚析构函数不会调用派生类的析构函数，导致派生类中的资源可能不会被正确释放，从而引发内存泄漏或其他未定义行为。
+### 2. 引用类型的转换
 
-为了避免这个问题，基类的析构函数应该被声明为虚函数。这样，当通过基类的指针删除派生类的对象时，首先会调用派生类的析构函数，然后再调用基类的析构函数，确保资源被正确释放。
-
-#### 纯虚析构函数
-A prospective(since C++20) destructor may be declared pure virtual, for example in a base class which needs to be made abstract, but has no other suitable functions that could be declared pure virtual. A pure virtual destructor must have a definition, since all base class destructors are always called when the derived class is destroyed:
 ```cpp
-class AbstractBase
-{
-public:
-    virtual ~AbstractBase() = 0;
-};
-AbstractBase::~AbstractBase() {}
- 
-class Derived : public AbstractBase {};
- 
-// AbstractBase obj; // compiler error
-Derived obj;         // OK
+Derived derivedObj;
+Base& baseRef = derivedObj;
+
+try {
+    // 引用转换：成功返回有效引用，失败抛出 std::bad_cast 异常
+    Derived& derivedRef = dynamic_cast<Derived&>(baseRef);
+    // 转换成功，可以安全使用 derivedRef
+    derivedRef.someMethod();
+} catch (const std::bad_cast& e) {
+    // 转换失败，处理异常
+    std::cout << "转换失败: " << e.what() << std::endl;
+}
 ```
-
-#### 析构函数的访问级别
-1. **析构函数是 `private`**：
-   如果析构函数被声明为 `private`，那么它只能在类的内部成员函数或友元函数中被调用。这通常用于防止外部代码直接删除对象，确保对象的生命周期由类本身管理。
-
-2. **非静态局部对象**：
-   析构函数是 private，则编译会提示错误。
-   在 C++ 中，普通对象（局部对象）的生命周期结束时，它们的析构函数会被自动调用。这一过程是由编译器生成的代码来管理的，编译器会在对象的作用域结束时插入析构函数的调用。如果一个对象的析构函数是 private 的，编译器生成的代码在尝试调用它时会遇到访问权限的问题，因为编译器生成的代码相当于是在类外部调用析构函数，这违反了类的封装性和访问控制规则，会导致编译错误。 (待验证？？)
-
-3. **动态分配的对象**：
-   对于动态分配的对象（使用 `new` 关键字创建的对象），即使析构函数是 `private` 的，也必须手动使用 `delete` 来调用析构函数。如果不这样做，对象的析构函数不会自动被调用，从而导致资源泄漏。
-
-4. **静态局部对象**：
-   析构函数是 private，程序结束后也会调用析构函数。(示例：[C++ Singleton - HackMD](https://hackmd.io/@WesleyCh3n/S1Rlm1kf9))
-   对于静态对象，它们的生命周期与程序的运行期间是一致的。静态对象的析构函数通常在程序结束时由运行时系统调用。即使析构函数是 private 的，运行时系统也能调用它，因为这种调用不受常规访问控制的限制。这是因为静态对象的析构函数调用是由运行时系统在程序退出时自动进行的，它不受类内部访问控制的限制。(待验证？？)
-   The destructor for a block variable with static storage duration is called at program exit, but only if the initialization took place successfully. ([Storage class specifiers - cppreference.com](https://en.cppreference.com/w/cpp/language/storage_duration))
-
-#### 注意
-Calling a destructor directly for an ordinary object, such as a local variable, invokes undefined behavior when the destructor is called again, at the end of scope.
-
-如果手动调用析构函数后，作用域结束时再次自动调用析构函数，会导致未定义行为。
 
 ## 生存期
 > [Lifetime - cppreference.com](https://en.cppreference.com/w/cpp/language/lifetime) 
 > [生存期 - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/language/lifetime.html) 
 > [https://www.syntagm.co.uk/design/articles/exolmcpp.pdf](https://www.syntagm.co.uk/design/articles/exolmcpp.pdf) 
 
-## RAII 资源获取即初始化
-> [RAII - cppreference.com](https://en.cppreference.com/w/cpp/language/raii) 
-
 ## 内存管理
 > [虚拟内存](https://xiaolincoding.com/os/3_memory/vmem.html#虚拟内存)
-
 
 # object file
 > [Getting Title at 18:47](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第七章%20Linking.md) 
