@@ -11,9 +11,7 @@ C++ 学习笔记
 > [cplusplus](https://cplusplus.com/doc/tutorial/)
 > [cppreference](https://en.cppreference.com/w/)
 
-# C++ 基础语法
-
-## 从源代码变成可执行文件的过程
+# 从源代码变成可执行文件的过程
 在C++中，程序从源代码转变为可执行文件的过程涉及多个步骤，这些步骤通常由集成的开发环境(IDE)或者命令行工具自动完成。下面是这一编译过程的基本步骤：
 
 1. **预处理（Preprocessing）**：
@@ -39,7 +37,7 @@ C++ 学习笔记
 
 这个过程不同系统和编译器可能会有所不同，但大体流程是一致的。同时现代的编译器可能会在这个过程中做很多优化操作。
 
-### 预处理
+## 预处理
 C++编译过程中的预处理阶段涉及几个关键操作，预处理器会对源代码文件进行一系列文本替换和宏展开，准备好输入供编译器进一步处理。这些操作主要包括：
 
 1. **宏定义的扩展**：
@@ -60,7 +58,7 @@ C++编译过程中的预处理阶段涉及几个关键操作，预处理器会�
 6. **生成行控制信息**：
    - 预处理器会添加特殊的行控制标识，以帮助编译器追踪行号和文件名，这对于错误调试十分重要。
 
-## translation phase
+# translation phase
 > [Phases of translation](https://en.cppreference.com/w/cpp/language/translation_phases#Phase_4)
 
 C++ 的翻译过程是由一系列阶段组成的，每一个阶段都将执行一个特定的操作。这些操作都是按照顺序执行的，后一阶段的输入是前一阶段的输出。翻译的阶段包括以下步骤：
@@ -95,22 +93,22 @@ C++ 的翻译过程是由一系列阶段组成的，每一个阶段都将执行�
 
 "Phases of Translation"更多地描述的是C++源代码从文本文件到可执行文件的转换过程中的逻辑层面和抽象过程。根据C++标准，这个过程被定义为8个阶段，它们详细描述了源代码是如何被处理和转换的。这些阶段包括字符映射、行拼接、记号生成、预处理、字符串字面量和字符字面量连接、翻译、实例化以及链接。这个分类着重于语言标准层面的规范描述，是对编译过程的严格按照C++标准的解释。
 
-## 翻译阶段和从编译到链接阶段的区别
+# 翻译阶段和从编译到链接阶段的区别
 - **重点不同**："Phases of Translation"侧重于语言标准和源代码处理的逻辑阶段，而从编译到连接的过程则侧重于具体实现和操作细节。
 - **细节层面不同**："Phases of Translation"提供了一个更为抽象和宏观的视角，注重于标准和规范，而编译到连接的过程更注重技术实现的细节和每个步骤的具体操作。
 - **目的不同**："Phases of Translation"旨在为编译器的实现提供标准化的模板，而编译到连接的过程更多地被用于解释和教育，以帮助人们理解源代码是如何被转换为可执行文件的。
 
-## 删除注释的阶段
+# 删除注释的阶段
 删除注释虽然在 phase 3，而预处理在 phase 4，但因为在实际的编译器实现中，预处理的活动通常被认为是一个整体，包括宏替换、包含处理和注释去除等操作。但如果按照C++标准中定义的翻译阶段来考虑，这些活动实际是分布在几个不同的逻辑阶段。
 
 尽管在传统的讨论和编译器的实际执行过程中，通常将移除注释视为预处理的一部分，但根据C++的翻译阶段来看，移除注释实际上是在预处理动作（第4阶段）之前，作为记号生成过程（第3阶段）的一部分完成的。
 
 这种分区可能在理论上有其意义，以确保语言的规范性和各实现之间的一致性，但在日常使用和讨论中，往往会简单地将所有这些活动总称为预处理。
 
-## 预处理指令
+# 预处理指令
 预处理指令是C++中一部分，在编译过程的最开始被处理。它们指导编译器在实际编译之前对源代码进行一些预处理。
 
-### `#include`
+## `#include`
 
 这个指令告诉预处理器包含一个文件的内容。这通常用于包含库头文件或其他源文件。
 
@@ -119,12 +117,12 @@ C++ 的翻译过程是由一系列阶段组成的，每一个阶段都将执行�
 #include "myheader.h" // 包含用户定义的头文件
 ```
 
-### 宏
+## 宏
 > [Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macros.html) 
 
 在 C++ 中，`#define` 指令是预处理器的一部分，用于定义宏。这意味着在编译之前，预处理器会将所有宏名称替换为其定义。`#define` 可以用来定义各种类型的常量，如整型、字符、字符串等。
 
-#### Object-like Macros
+### Object-like Macros
 > [Object-like Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Object-like-Macros.html) 
 
 - 整型
@@ -150,7 +148,7 @@ C++ 的翻译过程是由一系列阶段组成的，每一个阶段都将执行�
 ```
 这里，定义了一个包含字符串的宏 `GREETING`。在编译时，所有的 `GREETING` 实例将被替换为 `"Hello, World!"`。字符串常量通常被存储在程序的只读数据段中。
 
-#### 多行宏书写
+### 多行宏书写
 ```cpp
 #define NUMBERS 1, \
                 2, \
@@ -159,7 +157,7 @@ int x[] = { NUMBERS };
 → int x[] = { 1, 2, 3 };
 ```
 
-#### 宏定义生效的作用域
+### 宏定义生效的作用域
 > The C preprocessor scans your program sequentially. Macro definitions take effect at the place you write them. 
 
 ```cpp
@@ -168,7 +166,7 @@ foo = X; // X is not defined yet
 bar = X;
 ```
 
-#### Function-like Macros
+### Function-like Macros
 > [Function-like Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Function-like-Macros.html) 
 > To define a function-like macro, you use the same ‘#define’ directive, but you put a pair of parentheses **immediately** after the macro name. 
 
@@ -177,18 +175,18 @@ bar = X;
 ```
 这个宏 `SQUARE` 接受一个参数，并计算其平方。它展示了如何将宏用作函数。但是需要注意的是，宏没有作用域的概念，也不进行类型检查，因此它们在复杂表达式中可能产生意想不到的副作用。
 
-##### 宏参数
+#### 宏参数
 > [Macro Arguments (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Arguments.html) 
 > Leading and trailing whitespace in each argument is dropped, and all whitespace between the tokens of an argument is reduced to a single space. Parentheses within each argument must balance; a comma within such parentheses does not end the argument. 
 > Whitespace is not a preprocessing token, so if a macro foo takes one argument, foo () and foo ( ) both supply it an empty argument. Previous GNU preprocessor implementations and documentation were incorrect on this point, insisting that a function-like macro that takes a single argument be passed a space if an empty argument was required.
 
 宏参数中的空白字符会被忽略。
 
-#### 多层嵌套宏的扩展
+### 多层嵌套宏的扩展
 > [Macro Arguments (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Arguments.html) 
 > All arguments to a macro are completely macro-expanded before they are substituted into the macro body. After substitution, the complete text is scanned again for macros to expand, including the arguments.
 
-#### `#` Stringizing 字符串化
+### `#` Stringizing 字符串化
 > [Stringizing (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html) 
 
 在宏中，`#` 操作符会把跟随它的宏参数转换成一个字符串字面量：
@@ -197,7 +195,7 @@ bar = X;
 ```
 调用 `TO_STRING(123)` 会产生 `"123"`。
 
-#### `##` 连接操作符
+### `##` 连接操作符
 > [Concatenation (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 
 > It is often useful to merge two tokens into one while expanding macros. This is called token pasting or token concatenation. 
 > Keep in mind that the C preprocessor converts comments to whitespace before macros are even considered. Therefore, you cannot create a comment by concatenating ‘/’ and ‘*’. 
@@ -207,7 +205,7 @@ bar = X;
 - 不能通过宏创建注释，因为注释在宏展开前就被处理了。
 - `##` 的前后空白会被忽略。
 
-##### 宏连接生成不同的函数
+#### 宏连接生成不同的函数
 在软件开发中，宏可以用于实现元编程，即在编译时生成代码。这在处理大量相似但有细微差别的代码时非常有用，例如在创建大量具有相似功能的类或函数时。
 
 **CONCAT** 宏通过 `##` 运算符连接两个参数，生成一个新的标识符。这在需要动态生成代码时非常有用，尤其是在模板元编程中。
@@ -248,7 +246,7 @@ int main() {
 
 在这个示例中，我们使用 **DEFINE_LOADER** 宏来定义不同资源类型的加载函数。这个宏内部使用了 **CONCAT** 宏来生成具体的函数名，如 `load_image`、`load_model` 和 `load_sound`。这样，就可以在 `main` 函数中直接调用这些动态生成的加载函数，而不需要为每种资源类型手动编写加载函数。
 
-##### 宏连接生成枚举变量和结构体成员变量
+#### 宏连接生成枚举变量和结构体成员变量
 > [Concatenation (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 
 
 ```cpp
@@ -283,7 +281,7 @@ struct command commands[] =
 };
 ```
 
-##### 注意事项
+#### 注意事项
 在使用 `##` 连接操作符时，需要注意以下几个方面：
 
 1. **操作数必须是预处理器令牌**：`##` 操作符两边的操作数必须是有效的预处理器令牌。这意味着你不能使用它来连接不形成有效C++令牌的字符。
@@ -294,7 +292,7 @@ struct command commands[] =
 
 4. **防止宏展开错误**：在一些情况下，如果 `##` 的两边是宏参数，而这些参数自身也需要宏展开，可能会出现预处理结果不如预期的情况。为了确保宏参数在连接之前被正确地展开，你可能需要使用间接宏展开的技巧。
 
-##### 间接宏展开
+#### 间接宏展开
 如果我们想要根据不同的条件，动态地生成变量名或者函数名。这时，我们就需要使用宏的展开特性了。但是，有时候我们直接使用宏，会发现它并没有像预期那样工作，尤其是在宏参数需要先展开成其他内容再进行连接的场合。这时，间接展开就显得非常有用。
 
 首先定义两个宏，一个用于间接展开，一个是实际想要使用的宏：
@@ -329,7 +327,7 @@ CONCAT(FIRST_HALF, SECOND_HALF)
 
 这是一个非常有用的技巧，尤其是当宏的参数本身也是宏时。通过这种间接的方式，我们可以确保任何参数宏都会在连接之前被完全展开。这样不仅避免了预处理器相关错误，还提高了宏定义的灵活性和可用性。
 
-#### X Macro
+### X Macro
 > [Serializing C++ with X-Macros](https://kewarken.medium.com/serializing-c-with-x-macros-f9cb84725b50) 
 > [X macro - Wikipedia](https://en.wikipedia.org/wiki/X_macro) 
 
@@ -444,7 +442,7 @@ X Macro 的主要优点是：
 1. 可读性可能会受到一定影响。
 2. 预处理器的使用可能会导致一些复杂的错误，并且调试起来相对困难。
 
-#### 可变参数宏
+### 可变参数宏
 > [Variadic Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html) 
 
 可变参数宏（Variadic Macros）是C++预处理器的一个特性，它允许宏接受可变数量的参数。这是在C++11及其之后的标准中支持的特性，使得宏能够更灵活地处理不同数量的输入参数。
@@ -469,7 +467,7 @@ int main() {
 
 在这个例子中，定义了一个 `LOG` 宏，它可以接受一个字符串格式，然后是一个可变数量的参数，类似于 `printf` 的功能。`LOG` 宏首先接收一个格式字符串，然后是使用 `...` 表示的可变参数，它们在宏内部通过 `__VA_ARGS__` 引用。
 
-##### 处理不同数据类型
+#### 处理不同数据类型
 可变参数宏通过使用 `...` 和 `__VA_ARGS__` 来处理不同类型的输入。在宏中，`...` 表示宏可以接受任意数量的参数，而 `__VA_ARGS__` 是一个特殊的宏，它表示所有传递给可变参数宏的参数列表。
 
 要处理不同类型的输入，通常会结合使用格式化字符串（就像在 `printf` 函数中一样）与 `__VA_ARGS__`。这样做允许创建类似于标准C库函数 `printf` 的宏，它能够将不同类型的变量插入到字符串中去。
@@ -496,10 +494,10 @@ int main() {
 
 在实际使用时，应该要保证提供给宏的格式化字符串与传递的参数类型相匹配，因为预处理器不会进行类型检查，错误的匹配可能会导致未定义的行为。
 
-#### 条件编译宏
+### 条件编译宏
 条件编译在C/C++中是一个非常重要的功能，它允许根据不同的编译器、平台或配置来编译不同的代码。在C和C++混合编程中，`#if defined(__cplusplus)` 条件编译宏尤为重要。
 
-##### __cplusplus
+#### __cplusplus
 ```cpp
 #if defined(__cplusplus)
 ```
@@ -581,28 +579,28 @@ int main() {
    - **无法调用C++函数**:
      - `cpp_function` 无法在纯C代码中调用，确保了纯C代码的纯粹性。
 
-#### predefined macros
+### predefined macros
 > [Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Predefined-Macros.html) 
 
-##### standard predefined macros
+#### standard predefined macros
 > [Standard Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html) 
 
-##### common predefined macros
+#### common predefined macros
 > [Common Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html) 
 
-##### system-specific predefined macros
+#### system-specific predefined macros
 > [System-specific Predefined Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/System-specific-Predefined-Macros.html) 
 
-##### c++ named operators
+#### c++ named operators
 > [C++ Named Operators (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/C_002b_002b-Named-Operators.html) 
 
-#### undefining and redefining macros
+### undefining and redefining macros
 > [Undefining and Redefining Macros (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Undefining-and-Redefining-Macros.html) 
 
 - #define
 - #undef
 
-#### `#if`, `#elif`, `#else`, `#endif`
+### `#if`, `#elif`, `#else`, `#endif`
 这些指令用于条件编译。根据指定条件是否为真，可能会包括或排除代码部分。
 ```cpp
 #define DEBUG 1
@@ -612,7 +610,7 @@ int main() {
 #endif
 ```
 
-#### `#ifdef` 和 `#ifndef`
+### `#ifdef` 和 `#ifndef`
 这些指令检查一个宏是否被定义了，如果是(`#ifdef`)或不是(`#ifndef`)，则编译接下来的代码。
 ```cpp
 #ifndef PI
@@ -620,28 +618,28 @@ int main() {
 #endif
 ```
 
-#### `#error` 和 `#warning`
+### `#error` 和 `#warning`
 如果遇到这些指令，预处理器将分别显示错误或警告信息。
 ```cpp
 #error This is an error message
 ```
 
-#### `#pragma`
+### `#pragma`
 特定于编译器的指令，用于控制编译器的特定功能。
 ```cpp
 #pragma once // 防止头文件被包含多次
 ```
 
-#### `#line`
+### `#line`
 这个指令可以改变编译器认为的当前行号和文件名。
 ```cpp
 #line 100 "newfilename.cpp"
 ```
 
-#### macro pitfalls
+### macro pitfalls
 > [Macro Pitfalls (The C Preprocessor)](https://gcc.gnu.org/onlinedocs/cpp/Macro-Pitfalls.html) 
 
-#### 宏的局限性
+### 宏的局限性
 虽然宏功能强大，但也有一些缺点。宏只进行文本替换，没有类型检查，也不尊重作用域。过多使用宏可能会导致代码难以阅读和调试。
 
 1. **类型不安全**：宏进行的是文本替换，不会进行类型检查，这可能导致类型错误或不一致，而在编译时不会报错。
@@ -658,7 +656,7 @@ int main() {
 
 由于以上原因，在现代C++编程实践中，建议尽可能使用模板、内联函数和常量代替宏。这些语言特性提供了更好的类型安全、更明确的作用域，以及更容易阅读和维护的代码。例如，模板可以用来处理在编译时需要决定的泛型编程问题，而内联函数可以在不牺牲性能的情况下提供函数替代宏的功能。
 
-## 代码换行显示
+# 代码换行显示
 1. 如果在一行中写了一个完整的语句，但是发现该行代码过长，希望在以下行继续编写，你可以在行尾用反斜杠(`\`)来表示要在下一行继续这一语句。
 ```cpp
 int sum = 1 + 2 + \
@@ -678,16 +676,16 @@ int product = (1 +
 4);
 ```
 
-## 翻译单元
+# 翻译单元
 多个翻译单元是指一个程序被分割成多个源代码文件，每个文件被单独编译成目标文件。在C++中，源文件通常是以`.cpp`后缀结尾的文件，而翻译单元则是指编译器用来生成单个目标文件的源代码加上其所包含的全部头文件。
 
 在多翻译单元的项目中，变量和函数的声明需要在多个单元中保持一致，如果一个全局变量或者函数被多个翻译单元使用，它的定义应该存放在一个单独的源文件中，而在其他需要使用它的源文件中，通过extern关键字声明它的存在。
 
 例如，如果有一个全局变量`int g_Variable;`在`file1.cpp`文件中定义，那么在另外一个文件`file2.cpp`中就需要用`extern int g_Variable;`来声明它，表示这个变量在其他地方定义，这样其他的翻译单元就可以访问`file1.cpp`中定义的`g_Variable`。
 
-## 字符串多行显示
+# 字符串多行显示
 
-### 字符串连接
+## 字符串连接
 一种实现多行字符串的方法是通过在编译时自动进行的字符串连接。在 C++ 中如果将两个或多个字符串字面量放置在一起，它们会自动连接成一个单独的字符串字面量。
 
 ```cpp
@@ -702,11 +700,11 @@ int main() {
 }
 ```
 
-### 使用 Raw String Literals（原生字符串字面量）
+## 使用 Raw String Literals（原生字符串字面量）
 C++11 引入了 raw string literals（原始字符串字面量），它允许开发者在字符串中包含任意字符，包括换行符和引号。这对于处理多行字符串、正则表达式或包含特殊字符的文件路径非常有用。
 原生字符串字面量通过 `R"delimiter(...)delimiter"` 的形式使用，其中 `delimiter` 是一个可选的自定义分隔符，可以为空。使用原生字符串字面量时，可以直接在字符串中加入新行，而无需手动添加 `\n`。
 
-#### 多行字符串
+### 多行字符串
 ```cpp
 #include <iostream>
 
@@ -719,7 +717,7 @@ This is the third line.)";
 }
 ```
 
-#### 字符串中包含引号
+### 字符串中包含引号
 ```cpp
 #include <iostream>
 
@@ -734,7 +732,7 @@ int main() {
 Hello, "world"!
 ```
 
-#### 使用分隔符
+### 使用分隔符
 如果不使用分隔符，那如果字符串中有 `)"` 则会认为字符串已结束，如：
 ```cpp
 #include <iostream>
@@ -769,7 +767,7 @@ a""
 e
 ```
 
-#### 包含特殊字符
+### 包含特殊字符
 ```cpp
 #include <iostream>
 
@@ -786,7 +784,7 @@ Special characters:
  
 ```
 
-### 在操作符或括号内换行
+## 在操作符或括号内换行
 这种方法是在表达式的操作符后或在括号内换行，而不影响代码的逻辑结构。这样做可以让每一行的长度保持在合理的范围内，提高代码的可读性。
 ```cpp
 std::string str = "这是一个非常非常长的字符串，" +
@@ -794,7 +792,7 @@ std::string str = "这是一个非常非常长的字符串，" +
                   "以提高代码的可读性。";
 ```
 
-## gcc
+# gcc
 > [gcc](https://gcc.gnu.org/)
 > [G++ and GCC (Using the GNU Compiler Collection (GCC))](https://gcc.gnu.org/onlinedocs/gcc-11.5.0/gcc/G_002b_002b-and-GCC.html) 
 
@@ -813,7 +811,7 @@ std::string str = "这是一个非常非常长的字符串，" +
    - **gcc**：适用于将多种语言混合在一个项目中时使用，例如 C 和 C++ 混合编程，你可以使用 gcc 处理 C 文件，而用 g++ 编译和链接 C++ 文件。
    - **g++**：专注于 C++ 程序的编译和链接。
 
-## make 和 makefile
+# make 和 makefile
 > [make](https://www.cs.tufts.edu/comp/15/reference/make/makefile.pdf)
 
 如果程序很简单，可以直接用 gcc 进行编译和链接，但当一个工程复杂时，借助工具更方便，因此有了 make 工具。
@@ -857,7 +855,7 @@ clean:
 
 make 是一个用于构建和编译程序的工具，它使用 makefile 来描述构建规则。makefile 是一个文本文件，其中包含一系列规则，用于编译和链接程序。
 
-## cmake
+# cmake
 > [cmake](https://cmake.org/cmake/help/latest/)
 
 cmake 是一个跨平台的构建系统生成器，它不直接建立构建，而是生成标准化的构建文件，如 Unix 的 Makefile 或 Windows Visual Studio 的项目文件。cmake 使用 CMakeLists.txt 文件来定义构建过程，可以根据这个定义生成适用于不同编译系统的构建文件。因此，cmake 提供了一种高级的方法来定义和管理项目构建过程，使之能够在多个平台上以一致的方式构建。
@@ -871,22 +869,22 @@ cmake 是一个跨平台的构建系统生成器，它不直接建立构建，�
 
 总的来说，`cmake` 是现代化的构建配置工具，它让跨平台的构建过程不再依赖于手动编写和维护复杂的 `Makefile`。
 
-## nmake
+# nmake
 > [nmake](https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170)
 
 nmake 是 Microsoft 提供的一个版本的 make 工具，用于支持 Microsoft 的编译环境，类似于 Unix/Linux 下的 make。nmake 使用的是 Microsoft 特有的 Makefile 格式，与 Unix 下的 Makefile 存在一些差异。nmake 通常用于编译和构建在 Visual Studio 环境下开发的项目。
 
-## qmake
+# qmake
 > [qmake](https://doc.qt.io/qt-6/qmake-manual.html)
 
 `qmake` 是一个由 Qt 开发的跨平台构建系统工具，专门用于简化 Qt 应用程序的开发和构建过程。`qmake` 能够根据项目的需求自动生成适合不同编译器和开发环境的 `Makefile` 文件，从而让开发者能够更专注于软件开发本身，而不是花费时间在配置构建环境上。
 
-### 特点
+## 特点
 1. **跨平台性**：`qmake` 能够在多个平台上生成对应的构建配置，包括 Windows、macOS、Linux 等。
 2. **简化构建配置**：使用 `qmake`，开发者只需编写简单的 `*.pro` 或 `*.pri` 文件来描述项目的结构和构建设置，`qmake` 就能自动为你生成复杂的 `Makefile`。
 3. **Qt 集成**：`qmake` 与 Qt 库紧密集成，能够自动处理 Qt 库的依赖和相关配置，极大简化了 Qt 应用的构建过程。
 
-### 使用方法
+## 使用方法
 - **安装**：通常 `qmake` 会随 Qt SDK 一起安装，确保 Qt 的安装路径被加入到系统的环境变量中，这样就可以在命令行中直接使用 `qmake` 命令了。
 - **编写项目文件**：项目文件（通常是 `.pro` 文件）是 `qmake` 的核心，它描述了项目的结构、源文件、头文件、资源文件以及特定的构建配置等。
 ```qmake
@@ -907,12 +905,12 @@ make  # 在 Unix/Linux 或 macOS 上
 nmake # 在 Windows 上，如果是使用 nmake
 ```
 
-### 高级用法
+## 高级用法
 `qmake` 也支持比较复杂的项目结构，允许自定义构建变量、条件编译、模板生成等高级功能。这些功能通过在 `.pro` 文件中编写更为复杂的配置来实现。
 
 总而言之，`qmake` 是一个强大的工具，尤其适合于 Qt 应用的开发。通过自动化处理构建配置，它让开发者能够把精力更多地集中在实现应用程序的功能上。
 
-## build 和 rebuild
+# build 和 rebuild
 在 Qt 工程中，首先需要编写好 `.pro` 文件，然后执行 `qmake` 生成 `Makefile`。但是，执行 `qmake` 仅仅是生成了构建工程所需的 `Makefile`，而实际上还需要执行构建命令（如 `make` 或在 Qt Creator 中的 build 按钮）来编译和链接代码生成可执行文件或库。
 
 - **`qmake`**: 执行 `qmake` 会根据 `.pro` 文件中定义的配置来生成 `Makefile`。这个步骤不会编译代码，它仅仅是为后续的编译步骤准备所需的 `Makefile` 文件。
@@ -923,7 +921,7 @@ nmake # 在 Windows 上，如果是使用 nmake
 
 `qmake` 是用来生成 `Makefile` 文件的，而 `build` 是用 `Makefile` 来编译和链接生成最终的二进制文件，`rebuild` 则是完整地清除并重新构建整个项目。在日常开发中，你会频繁地进行 `build` 操作，而在工程配置变化后，你可能需要重新运行 `qmake`，并且在一些特定情况下执行 `rebuild`。
 
-## compile build and make
+# compile build and make
 - compile
 这里的编译指将源代码转换成目标代码的过程。 在 C/C++ 中，这个过程通常由编译器完成。
 - build
@@ -931,14 +929,14 @@ nmake # 在 Windows 上，如果是使用 nmake
 - make
 make 是一个自动化构建工具，用于管理和控制软件构建过程。
 
-## 不同编译器
+# 不同编译器
 
-## 声明
+# 声明
 > [declarations](https://en.cppreference.com/w/cpp/language/declarations)
 
 在C++中，纯声明（不包含定义）是一种常用的实践，特别适用于向编译器介绍某个标识符（如变量、函数、类等）而不立即提供其完整的定义。这种方式特别有用于实现头文件和模块化编程，让编译器知道某个标识符的存在及其类型，但实现（定义）可能会在其他地方给出。
 
-### 函数声明（函数原型）
+## 函数声明（函数原型）
 函数的声明（Function Declaration）告诉编译器函数的名字、返回类型以及参数（如果有的话），但不包括具体的函数实现。函数的定义（Function Definition）则包括了函数的具体实现。
 
 在C++中，函数声明非常简单，仅仅需要指定函数的返回类型、函数名以及参数列表（如果有的话），通常以分号结尾。例如：
@@ -969,7 +967,7 @@ void doNothing() {} // 空函数体的函数定义
 void doNothing(); // 函数声明
 ```
 
-### 外部变量声明
+## 外部变量声明
 在C++编程中，`extern`关键字非常重要，它用于声明一个变量或函数是在别处定义的，这意味着使用`extern`可以在多个文件之间共享全局变量和函数。
 
 考虑一个项目，其中包含两个文件：`globals.cpp`和`main.cpp`。
@@ -1014,7 +1012,7 @@ Global variable value: 42
 
 使用`extern`关键字确保了在`main.cpp`中能正确访问在`globals.cpp`中定义的`globalVariable`变量，这展示了如何在C++中跨文件共享全局变量。
 
-### 类和结构体的前向声明
+## 类和结构体的前向声明
 当只需要知道一个类的存在而不需要知道类的细节时，你可以进行类的前向声明。这特别有用于处理循环依赖问题。
 ```cpp
 class MyClass; // 类的前向声明
@@ -1027,7 +1025,7 @@ struct MyStruct; // 结构体的前向声明
 typedef unsigned long ulong; // 声明了一个unsigned long的别名为ulong
 ```
 
-### 模板声明
+## 模板声明
 模板可以被声明但不立即定义，直到实例化时。
 ```cpp
 template <typename T>
@@ -1037,7 +1035,7 @@ template <typename T>
 void myTemplateFunction(T); // 模板函数的声明
 ```
 
-### 使用extern "C"声明C语言链接
+## 使用extern "C"声明C语言链接
 在C++中，当想要声明一个函数遵循C语言的链接规则时，可以使用`extern "C"`。
 
 ```cpp
@@ -1046,15 +1044,15 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 通过这些声明，可以让编译器在不需要完整定义的情况下对程序的不同部分进行编译，有助于模块化设计和减少编译依赖。这种做法在大型项目和库的设计中非常有用。
 
-## 定义
+# 定义
 > [Initialization](https://en.cppreference.com/w/cpp/language/definition)
 
 在C++中，定义(Definition)是创建程序中使用的实体的过程。这些实体可以是变量、函数、类等。定义会为这些实体分配内存，并且可能会初始化它们。定义与声明(Declaration)是有区别的，声明只是告诉编译器某个标识符的存在，而定义则是为其分配存储空间。
 
-### 变量定义
+## 变量定义
 定义变量时，编译器会在内存中为此变量分配空间。
 
-### 函数定义
+## 函数定义
 > [function definition](https://en.cppreference.com/w/cpp/language/function#Function_definition)
 
 函数定义是函数声明的一个超集，它包含了函数的声明以及函数体，因此，函数定义较之函数声明会多出函数体这一部分。即，函数定义除了提供声明的所有信息外，还提供了函数的实现细节，此时编译器已经能够知道函数将会执行什么操作。正在执行的程序中的函数代码存储在内存的代码段(code segment)中，这部分内存在程序启动时由操作系统加载到内存中，是只读的，并且共享于所有执行的线程。因此，通常不说函数的定义在内存中占用多少空间，因为这是由编译器处理的，并且在程序运行时由操作系统管理。例如`void func() { // some code }`，在这里不仅声明了函数，还给出了函数执行的具体代码，因此这是一个函数定义。
@@ -1064,7 +1062,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 函数定义本身，就是代码中的一段，它描述了函数如何执行其任务。只有在函数被调用时，才会发生内存的分配。在编写代码时，函数定义只是告诉编译器函数如何工作，但不会分配内存，直到函数实际执行时才会进行。
 
-### 类定义
+## 类定义
 > [class definition](https://en.cppreference.com/w/cpp/language/class#Class_definition)
 
 类定义本身在代码中是一种模板，它描述了一个类型的属性（成员变量）和行为（成员函数或方法）。类定义本身不直接涉及到内存分配。内存分配发生在创建类的实例（对象）时。
@@ -1079,7 +1077,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 因此，虽然类定义本身不涉及到内存分配，但是创建类的实例会根据数据成员和对象创建方式（如堆或栈分配）涉及到内存分配。
 
-## 作用域
+# 作用域
 > [scope](https://en.cppreference.com/w/cpp/language/scope)
 
 1. **全局作用域**：
@@ -1098,7 +1096,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
    - 在类内部定义的成员（包括变量、函数等）拥有类作用域。
    - 类的成员可以通过对象访问（或通过类名访问静态成员）。
 
-## storage duration
+# storage duration
 > [storage duration](https://en.cppreference.com/w/cpp/language/storage_duration)
 
 1. **静态存储期**：
@@ -1116,7 +1114,7 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
    - 通过动态内存分配（使用`new`或`malloc`）创建的对象。
    - 不会自动销毁，需要使用`delete`或`free`来手动释放内存。
 
-## linkage
+# linkage
 > [1](https://en.cppreference.com/w/cpp/language/storage_duration)
 > [2](https://blog.csdn.net/simonyucsdy/article/details/82728456)
 
@@ -1139,13 +1137,13 @@ extern "C" void myCFunction(int); // 声明一个C语言函数
 
 在C++的编程实践中，合理使用链接属性可以更好地控制程序的模块化和封装，防止命名冲突，并且可以管理好程序的符号可见性。如上所述，可以通过将不需要跨文件共享的声明移入未命名命名空间或声明为`static`来实现内部链接。这是一种实用的封装手段，可用于隐藏辅助功能和细节实现，以免在文件间不小心产生冲突或误用。
 
-## scaler type
+# scaler type
 > [C++ named requirements: ScalarType - cppreference.com](https://en.cppreference.com/w/cpp/named_req/ScalarType) 
 
 
 
 
-## 初始化
+# 初始化
 > [Initialization](https://en.cppreference.com/w/cpp/language/initialization)
 > [Back to Basics: Initialization in C++ - Ben Saks - CppCon 2023](https://www.youtube.com/watch?v=_23qmZtDBxg&ab_channel=CppCon) 
 
@@ -1162,10 +1160,10 @@ If the initializer specified for a reference is (), the program is ill-formed.
 
 所以定义和初始化可以在同一行代码中完成，但它们描述的是不同的操作和阶段。
 
-### copy-initialization
+## copy-initialization
 > [Copy-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/copy_initialization) 
 
-### aggregate initialization
+## aggregate initialization
 > [Aggregate initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/aggregate_initialization) 
 
 ```cpp
@@ -1180,7 +1178,7 @@ Y y[] = {1, 2, 3, 4, 5, 6}; // y has only 2 elements:
 int z[] = {} // Error: cannot declare an array without any element
 ```
 
-### direct-initialization
+## direct-initialization
 > [Direct-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/direct_initialization) 
 
 - Initializes an object from explicit set of constructor arguments.
@@ -1198,7 +1196,7 @@ std::string s1("hello");
 std::string s2(s1); //调用拷贝构造函数，但还是 direct initialization
 ```
 
-### value-initialization
+## value-initialization
 > [Value-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/value_initialization) 
 
 - This is the initialization performed when an object is constructed with an empty initializer.
@@ -1271,12 +1269,12 @@ int main()
 }
 ```
 
-### reference initalization
+## reference initalization
 > [Reference initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/reference_initialization) 
 
 If the entity being initialized is a reference, see reference initialization.
 
-### Zero-initialization
+## Zero-initialization
 > [Zero-initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/zero_initialization) 
 
 Sets the initial value of an object to zero.
@@ -1311,18 +1309,18 @@ The effects of zero-initialization are:
 - If T is array type, each element is zero-initialized.
 - If T is reference type, nothing is done.
 
-### 列表初始化
+## 列表初始化
 > [List-initialization (since C++11) - cppreference.com](https://en.cppreference.com/w/cpp/language/list_initialization) 
 
-#### Direct-list-initialization
+## Direct-list-initialization
 
-#### Copy-list-initialization
+### Copy-list-initialization
 
-### 默认初始化
+# 默认初始化
 > [Initialization](https://en.cppreference.com/w/cpp/language/initialization)
 > [default initialization](https://en.cppreference.com/w/cpp/language/default_initialization)
 
-#### 内置类型的局部变量
+## 内置类型的局部变量
 如果没有显式初始化，它们不会被初始化。它们的初始值是未定义的。
 ```cpp
 #include <string>
@@ -1355,7 +1353,7 @@ int main()
 }
 ```
 
-#### 非类的静态和线程局部变量
+## 非类的静态和线程局部变量
 > [static local variables](https://en.cppreference.com/w/cpp/language/storage_duration#Static_local_variables)
 
 如果没有显示初始化，在程序启动（对于全局或命名空间作用域的静态变量）或线程启动（对于线程局部变量）时被零初始化。
@@ -1366,15 +1364,16 @@ If the initialization throws an exception, the variable is not considered to be 
 
 If the initialization recursively enters the block in which the variable is being initialized, the behavior is undefined.
 
-#### 类
+## 类
 如果类有默认构造函数（无论是用户定义的还是编译器自动生成的），则使用这个默认构造函数进行初始化。
 
-#### 类成员变量初始化
+### 类成员变量初始化
+> [别再写重复的初始化代码了！现代 C++ 程序员都在用的“一行代码”神技](https://mp.weixin.qq.com/s?__biz=Mzk2NDUyOTQzMA==&mid=2247483705&idx=1&sn=f137d29d51ddcd3b6cd867b76cf0d3a0&chksm=c4735d40f304d4562be7b75517c4416b8bf34af60dd471efa61882d0632c7a10d81588cd1ae7&cur_album_id=4104376609422147595&scene=189#wechat_redirect) 
+
 - 类的内置类型成员（如`int`、`double`等）在创建对象时不会被自动初始化，其值是未定义的，除非它们被显式地在类定义中赋初值。
 - 类的成员如果是对象，并且这些对象属于的类具有默认构造函数，那么这些成员对象会使用它们的默认构造函数进行初始化。
 - 类的成员如果是有静态存储期的内置类型或是有静态存储期的对象，那么在程序启动时它们会被初始化；如果是有动态存储期的对象，那么在分配内存时它们会使用默认构造函数进行初始化。
 
-### 类中成员变量两种初始化方式
 在C++中，初始化类成员变量可以在两个地方进行：在类定义中直接对成员变量进行初始化，或者在类的构造函数初始化列表中进行初始化。两种方法各有优缺点，适用情况也略有不同。
 
 #### 在类定义中初始化
@@ -1399,6 +1398,146 @@ private:
 
 **缺点：**
 - 灵活性略低：不能基于构造函数参数动态初始化成员变量。
+
+##### 不能初始化情况
+
+```cpp
+class MyClass {
+private:
+    int x = 10;              // 正确：基本类型
+    double y = 3.14;         // 正确：基本类型
+    std::string name = "default"; // 正确：有默认构造函数的类类型
+    static const int SIZE = 100; // 正确：静态常量整型
+    static constexpr double PI = 3.14159; // 正确：静态常量表达式
+};
+```
+
+###### 1. 非常量静态成员变量
+
+**静态成员变量**属于类本身，而不是类的实例。它们必须在类外单独定义和初始化。
+
+```cpp
+class MyClass {
+private:
+    static int count; // 声明，不能在类内初始化
+    // static int count = 0; // 错误：非常量静态成员不能在类内初始化
+};
+
+// 必须在类外定义和初始化
+int MyClass::count = 0; // 正确：在类外初始化
+```
+
+**例外**：C++17 引入了内联静态变量，允许在类内初始化非常量静态成员：
+
+```cpp
+class MyClass {
+private:
+    inline static int count = 0; // C++17 及以后：正确
+};
+```
+
+###### 2. 引用成员变量
+
+**引用成员变量**必须在构造函数的初始化列表中初始化，不能在类定义中直接初始化。
+
+```cpp
+class MyClass {
+private:
+    int& ref; // 引用成员
+    // int& ref = some_var; // 错误：不能在类内初始化引用
+    
+public:
+    MyClass(int& var) : ref(var) {} // 正确：在构造函数初始化列表中初始化
+};
+```
+
+###### 3. 没有默认构造函数的类类型成员
+
+如果成员是类类型且该类**没有默认构造函数**，则必须在构造函数的初始化列表中初始化。
+
+```cpp
+class NoDefault {
+public:
+    NoDefault(int value) {} // 只有带参数的构造函数，没有默认构造函数
+};
+
+class MyClass {
+private:
+    NoDefault obj; // 需要初始化
+    // NoDefault obj(42); // 错误：不能在类内这样初始化
+    
+public:
+    MyClass() : obj(42) {} // 正确：在构造函数初始化列表中初始化
+};
+```
+
+###### 4. 需要参数初始化的成员
+
+任何需要**参数**进行初始化的成员都必须在构造函数的初始化列表中初始化。
+
+```cpp
+class MyClass {
+private:
+    std::vector<int> vec(10, 0); // 错误：不能带参数初始化
+    
+public:
+    MyClass() : vec(10, 0) {} // 正确：在构造函数初始化列表中初始化
+};
+```
+
+###### 5. 数组成员（特定大小）
+
+虽然可以在类定义中声明数组，但不能直接初始化数组元素（除了使用 C++11 的统一初始化）。
+
+```cpp
+class MyClass {
+private:
+    int arr[5]; // 声明数组
+    // int arr[5] = {1, 2, 3, 4, 5}; // C++11 前：错误
+    
+    // C++11 及以后：可以使用统一初始化
+    int arr2[5] = {1, 2, 3, 4, 5}; // C++11：正确
+};
+```
+
+###### 6. 常量成员变量
+
+**常量成员变量**必须在构造函数的初始化列表中初始化，不能在类定义中直接初始化（除了静态常量整型）。
+
+```cpp
+class MyClass {
+private:
+    const int value; // 常量成员
+    // const int value = 42; // 错误：非静态常量成员不能在类内初始化
+    
+public:
+    MyClass() : value(42) {} // 正确：在构造函数初始化列表中初始化
+};
+```
+
+###### 7. 自身类类型的成员
+
+类不能包含**自身类型的非静态成员**，因为这会导致无限递归的定义。
+
+```cpp
+class MyClass {
+private:
+    // MyClass self; // 错误：不能包含自身类型的非静态成员
+    MyClass* selfPtr; // 正确：可以包含指向自身类型的指针
+    std::unique_ptr<MyClass> selfSmartPtr; // 正确：可以包含智能指针
+};
+```
+
+###### 总结
+
+| 成员类型               | 是否能在类定义中初始化 | 正确初始化方式     |
+| ---------------------- | ---------------------- | ------------------ |
+| 非常量静态成员         | 否（C++17前）          | 类外定义和初始化   |
+| 引用成员               | 否                     | 构造函数初始化列表 |
+| 无默认构造函数的类成员 | 否                     | 构造函数初始化列表 |
+| 需要参数初始化的成员   | 否                     | 构造函数初始化列表 |
+| 常量非静态成员         | 否                     | 构造函数初始化列表 |
+| 自身类类型的非静态成员 | 否                     | 不能有这种成员     |
 
 #### 在构造函数初始化列表中初始化
 ```cpp
@@ -1448,8 +1587,8 @@ If the initialization recursively enters the block in which the variable is bein
 #### 静态局部变量初始化是线程安全的
 If multiple threads attempt to initialize the same static local variable concurrently, the initialization occurs exactly once (similar behavior can be obtained for arbitrary functions with std::call_once).
 
-### 示例
-#### scaler type 初始化
+## 示例
+### scaler type 初始化
 ```cpp
 int i = {};        // 值初始化，i 被初始化为 0
 int j;            // default-initialization，未定义
@@ -1457,7 +1596,7 @@ int* p = {};      // 值初始化，p 被初始化为 nullptr
 int* q;           // default-initialization，未定义
 ```
 
-#### 数组初始化
+### 数组初始化
 ```cpp
 int a[3] = {}; // 值初始化 所有元素初始化为 0
 int a[3] = {0}; // 不是值初始化，仅显示将第一个元素初始化为 0
@@ -1475,7 +1614,7 @@ T object = { arg1, arg2, ... };
 对于 default-initialization，这里的元素为 int，是 automatic 存储期，因此初始值为未定义的。
 
 
-## 初始化和内存分配
+# 初始化和内存分配
 在C++编程中，初始化和内存分配是两个相关但又独立的过程。
 
 1. 初始化：初始化是创建变量并给它赋予初始值的过程。这个过程可能简单，比如对整数变量进行初始化，就是赋予它一个整数值。对于更复杂的数据类型，例如对象或者数组，它们的初始化可能涉及到调用构造函数、内存分配等动作。
@@ -1492,12 +1631,12 @@ T object = { arg1, arg2, ... };
 
 在C++11及其后续版本中，允许在类体内给非静态成员变量提供一个初始值，这种方式叫做默认成员初始化器。这样做并不会引发实际的初始化行为，它只是提供了一份初始值的备份。当对象被创建时（也就是在对象的构造函数调用时）如果在初始化列表中明确地初始化了该成员，那么成员初始化器所指定的初始值就会被忽略，否则就会使用成员初始化器提供的初始值进行初始化。
 
-## extern
+# extern
 > [C++ keyword: extern - cppreference.com](https://en.cppreference.com/w/cpp/keyword/extern) 
 
 在C++编程中，`extern`关键字非常重要，它用于声明一个变量或函数是在别处定义的，这意味着使用`extern`可以在多个文件之间共享全局变量和函数。
 
-### `extern` 关键字的主要用途
+## `extern` 关键字的主要用途
 
 1. **共享全局变量**:
     - 允许某一文件中的全局变量可以被其他文件访问。
@@ -1509,7 +1648,7 @@ T object = { arg1, arg2, ... };
 3. **与 `extern "C"` 配合使用**:
     - 在C++中，使函数或变量按照C语言的方式进行链接，以避免编译器对名称进行修饰（name mangling）。
 
-### `extern`的关键点
+## `extern`的关键点
 
 1. **声明而非定义**: 当你使用`extern`时，它告诉编译器相应的变量或函数在其他地方定义，而不是在当前位置创建一个新的实例。
    
@@ -1517,7 +1656,7 @@ T object = { arg1, arg2, ... };
 
 3. **避免重复定义错误**: 如果没有`extern`，在多个文件中声明同一个全局变量会导致重复定义错误。使用`extern`可以避免这个问题。
 
-### 示例
+## 示例
 
 考虑一个项目，其中包含两个文件：`globals.cpp`和`main.cpp`。
 
@@ -1545,7 +1684,7 @@ int main() {
 
 在这个例子中，我们在`globals.cpp`文件中定义了一个名为`globalVariable`的全局变量。然后，在`main.cpp`文件中，我们使用`extern`关键字声明了同名的全局变量，这表明该变量的定义在其他位置（即`globals.cpp`）。因此，当`main.cpp`访问`globalVariable`时，它实际上访问的是在`globals.cpp`中定义的变量。这就允许不同文件之间共享和访问同一个变量。
 
-### 编译链接
+## 编译链接
 
 为了使上面的例子工作，需要编译两个文件并将它们链接在一起。使用g++的命令行示例如下：
 
@@ -1563,7 +1702,7 @@ Global variable value: 42
 
 使用`extern`关键字确保了在`main.cpp`中能正确访问在`globals.cpp`中定义的`globalVariable`变量，这展示了如何在C++中跨文件共享全局变量。
 
-### 声明和定义的位置
+## 声明和定义的位置
 
 **`extern` 声明应该放在头文件中，而实际定义应该放在源文件中。**
 
@@ -1618,7 +1757,7 @@ int main() {
 }
 ```
 
-### 避免多重定义错误
+## 避免多重定义错误
 
 如果在头文件中直接定义变量：
 
@@ -1632,20 +1771,20 @@ namespace AppConfig {
 
 这会导致每个包含 config.h 的文件都有自己的 `activeUsers` 副本，链接时会报"多重定义"错误。
 
-### 提供清晰的接口
+## 提供清晰的接口
 
 头文件应该只包含声明，而不包含实现。这样：
 - 头文件是接口契约
 - 源文件是具体实现
 - 使用者只需要关心接口，不关心实现细节
 
-### 确保一致性
+## 确保一致性
 
 所有包含头文件的文件都使用相同的声明，确保类型和签名的一致性。
 
-### 常见错误和陷阱
+## 常见错误和陷阱
 
-#### 错误1：在头文件中定义变量
+### 错误1：在头文件中定义变量
 
 ```cpp
 // 错误：在头文件中定义变量
@@ -1653,7 +1792,7 @@ namespace AppConfig {
 int globalCounter = 0; // 每个包含此文件的.cpp都会有一个定义
 ```
 
-#### 错误2：在多个源文件中定义
+### 错误2：在多个源文件中定义
 
 ```cpp
 // file1.cpp
@@ -1663,7 +1802,7 @@ int sharedVar = 10; // 定义
 int sharedVar = 20; // 错误：重复定义
 ```
 
-#### 错误3：忘记提供定义
+### 错误3：忘记提供定义
 
 ```cpp
 // config.h
@@ -1673,7 +1812,7 @@ extern int missingVar; // 声明
 // 链接时会报"未定义的引用"错误
 ```
 
-### 在定义中的使用
+## 在定义中的使用
 
 `extern` 关键字在C++中有两种不同的用法：
 
@@ -1718,7 +1857,7 @@ void useMaxSize() {
 }
 ```
 
-#### 场景1：在头文件中声明，在源文件中定义
+### 场景1：在头文件中声明，在源文件中定义
 
 这是最常见和推荐的方式：
 
@@ -1730,7 +1869,7 @@ extern const int MAX_SIZE; // 声明
 extern const int MAX_SIZE = 100; // 定义
 ```
 
-#### 场景2：直接在定义处使用 extern
+### 场景2：直接在定义处使用 extern
 
 当确定这个常量只需要在一个文件中定义，并且不需要在头文件中声明时：
 
@@ -1744,7 +1883,7 @@ extern const int MAX_SIZE; // 声明，使用 constants.cpp 中的定义
 extern const double PI;
 ```
 
-### 函数声明
+## 函数声明
 
 在C/C++程序中，函数声明通常默认带有外部链接。因此，直接在头文件中声明函数时并不需要显式使用`extern`。
 
@@ -1778,7 +1917,7 @@ int main() {
 }
 ```
 
-## extern "C"
+# extern "C"
 `extern` 关键字是C和C++中的一个存储类说明符，用于声明变量和函数的外部链接。这意味着它们的定义可能位于其他文件中。这在编写跨文件程序时尤其关键，通过`extern`可以共享数据和函数，而无需重复定义它们。
 
 在C++中，编译器会对函数名称进行修饰，以支持函数重载和其他特性。而C语言并不支持名称修饰，这就导致C++编译器生成的库函数无法与C代码直接链接。这时，可以使用 `extern "C"` 来避免名称修饰，使得函数可以被C和C++代码共同使用。
@@ -1822,7 +1961,7 @@ int main() {
 }
 ```
 
-## 静态变量
+# 静态变量
 > [C++ keyword: static - cppreference.com](https://en.cppreference.com/w/cpp/keyword/static) 
 
 ## static 局部变量
@@ -1876,7 +2015,7 @@ extern int fileLocalVar; // 链接错误，无法访问另一个文件的静态�
 4. **初始化顺序**：不同编译单元中的static全局变量初始化顺序未定义
 5. **解决方案**：对于需要跨文件访问的静态数据，使用函数包装器或单例模式
 
-### 初始化
+## 初始化
 
 static 全局变量的初始化分为两种类型：
 
@@ -1909,7 +2048,7 @@ int main() {
 }
 ```
 
-### constexpr 与 static 结合
+## constexpr 与 static 结合
 
 C++11 引入了 constexpr，可以与 static 结合使用：
 
@@ -2053,7 +2192,7 @@ extern void fileLocalFunction(); // 链接错误，无法访问另一个文件�
 
 `static` 关键字的主要作用是控制变量和函数的可见性和生命周期，合理使用可以提高代码的模块化和封装性。
 
-## implicit conversions
+# implicit conversions
 > [Implicit conversions - cppreference.com](https://en.cppreference.com/w/cpp/language/implicit_conversion) 
 
 ## const_cast
@@ -2256,7 +2395,170 @@ try {
 }
 ```
 
-## 生存期
+# 指针和引用
+> [别再把引用当“轻量指针”了：C++指针 vs 左值引用，一篇文章拉开认知差距](https://mp.weixin.qq.com/s?__biz=Mzk2NDUyOTQzMA==&mid=2247483826&idx=1&sn=205dea6b5c618bb25a0b1f85b8fb4295&chksm=c4735dcbf304d4dd19c5d2a25226f7e4407dc27c85daff1ca609fcd6dca7b6616276f9e58375&cur_album_id=4104376609422147595&scene=190#rd) 
+
+## 返回引用
+
+**返回引用的本质是返回一个已存在对象的别名，而不是创建一个新的副本。**
+
+这意味着在函数外部操作这个返回值，实际上就是在直接操作函数内部那个原始对象。这与返回值（而非引用）有根本区别：
+- **返回值**：会触发拷贝/移动构造，生成一个原对象的副本。
+- **返回引用**：没有任何拷贝开销，直接提供对原对象的访问路径。
+
+### 1. 为了效率，避免不必要的拷贝 (Avoiding Copy)
+
+当返回一个很大的对象（例如`std::vector`, `std::string`, 自定义类）时，拷贝它的成本很高。返回引用可以完全避免这个成本。
+
+**常用场景**：类的Getter方法，返回私有成员。
+
+```cpp
+class BigData {
+    std::vector<int> veryLargeData; // 一个非常大的数据成员
+
+public:
+    // 返回 const 引用，允许读取但不允许修改，安全且高效
+    const std::vector<int>& getData() const {
+        return veryLargeData;
+    }
+
+    // 返回非 const 引用，允许调用者修改成员（需谨慎使用）
+    std::vector<int>& getMutableData() {
+        return veryLargeData;
+    }
+};
+
+int main() {
+    BigData obj;
+    // 高效，没有拷贝整个vector！
+    const std::vector<int>& dataRef = obj.getData(); 
+
+    // 允许直接修改内部的 veryLargeData
+    obj.getMutableData().push_back(42); 
+
+    return 0;
+}
+```
+
+### 2. 为了支持链式调用 (Chaining Operations)
+
+希望对一个对象连续调用多个操作，形如`obj.setX(1).setY(2).setZ(3);`。这要求每个函数都返回对当前对象（`*this`）的引用。
+
+**常用场景**：赋值运算符重载、流操作、建造者模式。
+
+```cpp
+class MyArray {
+public:
+    MyArray& operator=(const MyArray& other) { // 赋值运算符通常返回引用
+        // ... 实现赋值逻辑 ...
+        return *this; // 返回对当前对象的引用
+    }
+
+    MyArray& resize(size_t newSize) { // 返回引用以支持链式调用
+        // ... 改变大小 ...
+        return *this;
+    }
+
+    MyArray& fill(int value) {
+        // ... 填充数据 ...
+        return *this;
+    }
+};
+
+int main() {
+    MyArray a, b;
+    a = b; // operator= 返回引用，允许这种操作
+
+    // 链式调用：因为每个方法都返回 MyArray&
+    a.resize(10).fill(1); // 等价于 a.resize(10); a.fill(1);
+}
+```
+`std::cout` 的 `<<` 操作符是链式调用最经典的例子，它返回`std::ostream&`。
+
+### 3. 返回函数参数或全局对象
+
+当返回的对象生命周期不受函数控制时，可以返回其引用。它不是在函数内部创建的，所以函数结束后它依然存在。
+
+**常用场景**：操作符重载（如`<<`, `>>`, `[]`）、访问全局或静态对象。
+
+```cpp
+// 场景1：返回数组元素的引用，允许通过[]修改数组内容
+class SafeArray {
+    int data[10];
+public:
+    // 返回引用，使得 arr[i] = 5; 成为可能！
+    int& operator[](size_t index) {
+        if (index >= 10) throw std::out_of_range("Index out of range");
+        return data[index]; // 返回的是成员数组元素的引用
+    }
+
+    // 同样提供一个const版本，用于const对象
+    const int& operator[](size_t index) const {
+        // ... 检查索引 ...
+        return data[index];
+    }
+};
+
+int main() {
+    SafeArray arr;
+    arr[0] = 42; // 因为 operator[] 返回 int&，所以可以放在赋值语句左边
+    std::cout << arr[0]; // 调用 const 版本，返回 const int&
+}
+
+// 场景2：单例模式（返回静态局部变量的引用）
+class Singleton {
+public:
+    static Singleton& getInstance() {
+        static Singleton instance; // C++11保证这是线程安全的
+        return instance; // 返回对静态变量的引用
+    }
+    // ... 其他成员 ...
+};
+```
+
+### 绝对禁止的情况：返回局部变量的引用
+
+这是一个致命的错误，是C++新手最常掉的坑。
+
+```cpp
+// 错误示范！绝对不要这样做！
+int& badFunction() {
+    int localVar = 42; // localVar 的生命周期只在函数 badFunction 内
+    return localVar;    // 函数返回后，localVar 的内存被释放
+} // 函数结束，localVar 被销毁
+
+int main() {
+    int& ref = badFunction(); // ref 现在是一个“悬空引用”(Dangling Reference)
+    std::cout << ref; // 未定义行为！访问已释放的内存！
+    return 0;
+}
+```
+**后果**：**未定义行为 (Undefined Behavior)**。程序可能会崩溃、输出乱码，或者看起来好像正常工作（那只是运气好，内存还没被覆盖），是极其危险的Bug。
+
+### 返回引用 vs 返回指针
+
+两者都能避免拷贝，但用法和语义不同：
+
+| 特性       | 返回引用                 | 返回指针                   |
+| :--------- | :----------------------- | :------------------------- |
+| **语法**   | `Obj& func()`            | `Obj* func()`              |
+| **调用**   | `Obj obj = func();`      | `Obj* ptr = func();`       |
+| **空值**   | **绝不能为空**           | 可以返回 `nullptr`         |
+| **安全性** | 更安全，不存在`NULL`引用 | 需要检查指针是否有效       |
+| **语义**   | 强调“别名”，对象必然存在 | 强调“地址”，对象可能不存在 |
+
+### 返回 const引用 vs 非 const引用
+
+这是一个重要的设计选择，关乎封装性：
+- **`const T&`**：**只读**访问。这是最安全、最常用的方式，尤其对于Getter方法。调用者可以读取但不能修改内部状态。
+- **`T&`**：**可写**访问。这相当于暴露了内部实现，打破了封装。应谨慎使用，只有当你确实希望调用者直接修改内部成员时才这样做（如`operator[]`）。
+
+# 前置递增和后置递增
+> [C++左值右值终极一战：那个写 i++ 的同事，我劝他还是别再写了！](https://mp.weixin.qq.com/s?__biz=Mzk2NDUyOTQzMA==&mid=2247483752&idx=1&sn=fdbd20ddc011ceb8d9b80beca1399aa3&chksm=c4735d11f304d40720d1745f4c74bc1cf119b8e86cd84dc021c6465d58b691d2c1a623c431c0&cur_album_id=4104376609422147595&scene=190#rd) 
+
+
+
+# 生存期
 > [Lifetime - cppreference.com](https://en.cppreference.com/w/cpp/language/lifetime) 
 > [生存期 - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/language/lifetime.html) 
 > [https://www.syntagm.co.uk/design/articles/exolmcpp.pdf](https://www.syntagm.co.uk/design/articles/exolmcpp.pdf) 
