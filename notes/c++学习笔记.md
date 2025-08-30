@@ -1311,6 +1311,7 @@ The effects of zero-initialization are:
 
 ## 列表初始化
 > [List-initialization (since C++11) - cppreference.com](https://en.cppreference.com/w/cpp/language/list_initialization) 
+> [C++老手都犯的错：MyClass obj(); 到底是不是对象？C++11这个语法终结了所有争议！](https://mp.weixin.qq.com/s?__biz=Mzk2NDUyOTQzMA==&mid=2247483688&idx=1&sn=5fb56e4948f4ce3d0d1ec0d04a049002&chksm=c4735d51f304d44791a190567a38945e34d515dc69e56b0c215876afa2e228b3b39857204f6a&cur_album_id=4104376609422147595&scene=189#wechat_redirect) 
 
 ## Direct-list-initialization
 
