@@ -1269,6 +1269,17 @@ int main()
 }
 ```
 
+```cpp
+// 默认初始化（值未定义）
+int *p1 = new int[10];
+
+// 推荐做法：明确初始化
+int *scores = new int[10](); // 确保所有分数初始化为0
+
+// 或者使用C++11的统一初始化
+int *p3 = new int[10]{}; // 所有元素初始化为0
+```
+
 ## reference initalization
 > [Reference initialization - cppreference.com](https://en.cppreference.com/w/cpp/language/reference_initialization) 
 
@@ -2558,14 +2569,10 @@ int main() {
 > [C++左值右值终极一战：那个写 i++ 的同事，我劝他还是别再写了！](https://mp.weixin.qq.com/s?__biz=Mzk2NDUyOTQzMA==&mid=2247483752&idx=1&sn=fdbd20ddc011ceb8d9b80beca1399aa3&chksm=c4735d11f304d40720d1745f4c74bc1cf119b8e86cd84dc021c6465d58b691d2c1a623c431c0&cur_album_id=4104376609422147595&scene=190#rd) 
 
 
-
 # 生存期
 > [Lifetime - cppreference.com](https://en.cppreference.com/w/cpp/language/lifetime) 
 > [生存期 - C++中文 - API参考文档](https://www.apiref.com/cpp-zh/cpp/language/lifetime.html) 
 > [https://www.syntagm.co.uk/design/articles/exolmcpp.pdf](https://www.syntagm.co.uk/design/articles/exolmcpp.pdf) 
-
-## 内存管理
-> [虚拟内存](https://xiaolincoding.com/os/3_memory/vmem.html#虚拟内存)
 
 # object file
 > [Getting Title at 18:47](https://github.com/lxwcd/cs/blob/main/csapp/notes/深入理解计算机系统——第七章%20Linking.md) 
