@@ -1,0 +1,31 @@
+---
+# 通用规则
+BasedOnStyle: Google
+# 空格代替 tab
+UseTab: Never
+TabWidth: 4
+IndentWidth: 4
+# 列数限制
+ColumnLimit: 80
+# 花括号包裹方式
+BreakBeforeBraces: Allman
+# 指针和引用的位置
+DerivePointerAlignment: false
+PointerAlignment: Right # 或者 Left, Middle
+# 控制是否对齐连续的赋值语句。
+AlignConsecutiveAssignments: true
+# 控制是否对齐尾随注释。
+AlignTrailingComments: true
+# 控制是否允许短函数写在一行。
+AllowShortFunctionsOnASingleLine: All # 或者 None, InlineOnly, Empty
+# 控制尾随注释前的空格数。
+SpacesBeforeTrailingComments: 2
+# 控制关键字和左括号之间的空格。
+SpaceBeforeParens: ControlStatements # Never, Always
+# 控制 `case` 标签的缩进。
+IndentCaseLabels: true
+
+---
+# C++的独特规则
+Language: Cpp
+Standard: C++11
