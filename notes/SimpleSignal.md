@@ -12,7 +12,7 @@ Simple::Signal<char (float, int, std::string)> sig;
 ```
 char(float, int, std::string)
 ```
-这不是一个函数调用，而是一个**函数类型**的表示法，包含：
+这是是一个**函数类型**的表示法，包含：
 - **返回类型**: `char`
 - **参数类型**: `float`, `int`, `std::string`
 
